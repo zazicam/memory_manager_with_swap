@@ -66,8 +66,10 @@ void MemoryBlock::lock() {
 		bool done = false;
 		while(!done) {
 			pool->blockStateMutex.lock();
-
-			MemoryBlockState blockState = pool->blockState.at(pool->blockIndexByAddress(memAddr));
+			
+			size_t blockIndex = pool->blockIndexByAddress(memAddr);
+//			std::cout << "blockIndex: " << blockIndex << std::endl;
+			MemoryBlockState blockState = pool->blockState.at(blockIndex);
 			done = !blockState.locked;
 
 			pool->blockStateMutex.unlock();
@@ -134,20 +136,25 @@ MemoryPool::~MemoryPool() {
 }
 
 MemoryBlock MemoryPool::getBlock() {
+//	std::cout << "getBlock()" << std::endl;
 	std::lock_guard<std::mutex> guard(poolMutex);
 
 	void* ptr = privateAlloc();
 	size_t blockId = ++blocksCounter;
 	
 	blockStateMutex.lock();
-
-//	std::cout << "getBlock()" << std::endl;
 	
-	blockState.at(blockIndexByAddress(ptr)).id = blockId;
+	size_t blockIndex = blockIndexByAddress(ptr);
+//	std::cout << "blockIndex: " << blockIndex << std::endl;
+
+	blockState.at(blockIndex).id = blockId;  // WRONG INDEX HERE!!!
+	
 	++unlockedBlocksCounter;
 	blockStateMutex.unlock();
 
 	blockAddress[blockId] = BlockAddress(ptr);
+
+//	std::cout << "getBlock() almost end" << std::endl;
 
 	return MemoryBlock { blockId, ptr, blockSize, this };
 }
@@ -185,9 +192,9 @@ void* MemoryPool::privateAlloc() {
 	
 	blockStateMutex.unlock();
 	
-//	return blockMemoryAddress;
+	return blockMemoryAddress;
 
-	return new char[blockSize]; // DEBUG ONLY!!!
+//	return new char[blockSize]; // DEBUG ONLY!!!
 }
 
 void MemoryPool::privateFree(void *ptr, size_t id) {
