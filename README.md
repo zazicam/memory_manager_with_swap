@@ -1,9 +1,10 @@
 **The task was to create memory manager with swap (inside a file)**
+**Задание. Написать менеджер памяти со свопом.**
 
-Hi! Now it doesn't work!
+Пока что это все, что я успел сделать. И сейчас базовый менеджер памяти работает нормально,
+но своп вызывает сегфолты. Особенно при запросе блоков из нескольких потоков сразу.
 
-Memory pool works well, but swap causes a segfault especially with multithreads.
-
-I'm going to fix it this weekend, but it's more difficult then I thought!
+Собираюсь доделать на выходных. Попробую, но задание оказалось сложнее, чем я думал - 
+я уже примерно 30 часов на него потратил и еще много чего нужно отладить и исправить...
 
 
