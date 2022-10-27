@@ -136,12 +136,17 @@ void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
 	assert(blockIndex < numBlocks);
 	std::cout << "swap called for level " << swapLevel << std::endl;
 	std::unique_ptr<char> tmpBlock{new char[blockSize]};
+	std::cout << "read tmp " << std::endl;
 	swapTable[swapLevel]->ReadBlock(tmpBlock.get(), blockIndex);
 	char* blockAddress = poolAddress + blockIndex * blockSize;
+	std::cout << "write to file " << std::endl;
 	swapTable[swapLevel]->WriteBlock(blockAddress, blockIndex);
+	std::cout << "write to ram " << std::endl;
 	swapTable[RAM]->WriteBlock(tmpBlock.get(), blockIndex);
-	
+	std::cout << "swap in swapTable " << std::endl;
 	std::swap(swapTable[RAM]->at(blockIndex), swapTable[swapLevel]->at(blockIndex));
+	std::cout << "swap finished " << std::endl;
+
 }
 
 size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
@@ -172,6 +177,7 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 		swapLevel = numLevels;
 		++numLevels;
 	}
+	std::cout << "DiskSwap::Swap() swapLevel: " << swapLevel << std::endl;	
 
 	Swap(blockIndex, swapLevel);
 	return swapId.at(blockIndex)++;
