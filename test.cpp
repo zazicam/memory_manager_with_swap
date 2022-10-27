@@ -31,20 +31,24 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
     size_t readed = 0;
 
 	// 1. read whole input file in random blocks [1 .. max_block_size] bytes
-	std::vector<MemoryBlock*> blocks;
+	std::vector<MemoryBlock> blocks;
     while (readed < filesize) {
         size_t size = 1 + rand() % max_block_size;
         size = std::min(size, filesize - readed);
 
         MemoryBlock mb = memoryPool.getBlock();
         char *buf = mb.getPtr<char>();
-		blocks.push_back(&mb);
+		std::cout << "buf: " << (void*)buf << std::endl;
+		std::cout << "size: "<< size << std::endl;
+		blocks.push_back(mb);
 
         fin.read(buf, size);
         readed += size;
         mb.unlock();
     }
     fin.close();
+	
+	std::cout << "All blocks read! Count: " << blocks.size() << std::endl;
 
 	// 2. write all blocks to the output file 
     if (!fout) {
@@ -52,14 +56,21 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
     }
 	
 	for(auto& mb : blocks) {
-        mb->lock();
-		char* buf = mb->getPtr<char>();
-		size_t size = mb->size();
+        mb.lock();
+		char* buf = mb.getPtr<char>();
+		size_t size = mb.size();
+		std::cout << "buf: " << (void*)buf << std::endl;
+		std::cout << "size: "<< size << std::endl;
         fout.write(buf, size);
-        mb->unlock();
-        mb->free();
+        mb.unlock();
 	}
     fout.close();
+	std::cout << "All blocks written!" << std::endl;
+
+	for(auto& mb : blocks) {
+        mb.free();
+	}
+	std::cout << "All blocks freed!" << std::endl;
 }
 
 void CopyAllFilesInSingleThread(const std::string &dir1, const std::string &dir2) {
