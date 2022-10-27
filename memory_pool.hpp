@@ -18,6 +18,9 @@ class MemoryBlock {
     size_t size;
     MemoryPool *pool;
 
+    MemoryBlock(const MemoryBlock&) = delete;
+    MemoryBlock &operator=(const MemoryBlock &) = delete;
+
   public:
     MemoryBlock(void *ptr, size_t id, size_t size, MemoryPool *pool);
 
@@ -46,7 +49,7 @@ class MemoryPool {
     DiskSwap *swap;
 
     void *privateAlloc();
-    void privateFree(void *ptr, size_t id);
+	void privateFree(void *ptr); 
 
     size_t blockIndexByAddress(void *ptr);
 	char* blockAddressByIndex(size_t index);
@@ -62,4 +65,5 @@ class MemoryPool {
 	void unlockBlock(void *ptr); 
 
     MemoryBlock getBlock();
+	void freeBlock(void* ptr, size_t id); 
 };
