@@ -118,6 +118,7 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 	blockSize(blockSize),
 	numLevels(2),
 	poolAddress(static_cast<char*>(poolAddress)),
+	swapId(std::vector<uchar>(numBlocks, 2)), // 0 - empty, 1 - ram level, 2..255 - swap levels
 	swapTable({
 		new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
 		new DiskSwapLevel(1, numBlocks, blockSize)
@@ -152,12 +153,12 @@ size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
 	return swapLevel;
 }
 
-void DiskSwap::Swap(size_t blockIndex) {
-	// find first empty block in all existing levels for this blockIndex	
+size_t DiskSwap::Swap(size_t blockIndex) {
+	// just check if pool block is empty (no need to swap in that case)
 	if(swapTable[RAM] == 0) {
 		std::cerr << "Swap::MoveToSwap(" << blockIndex << ")."
 		          << "No need to swap: ram block with this index is empty!" << std::endl;
-		return;
+		return 1; // id for ram level
 	}
 
 	size_t swapLevel = FindEmptyLevel(blockIndex);
@@ -169,6 +170,7 @@ void DiskSwap::Swap(size_t blockIndex) {
 	}
 
 	Swap(blockIndex, swapLevel);
+	return swapId.at(blockIndex)++;
 }
 
 void DiskSwap::Print() {

@@ -53,6 +53,7 @@ class DiskSwap {
 	size_t blockSize;
 	uchar numLevels;
 	char* poolAddress;
+	std::vector<uchar> swapId;
 	std::vector<SwapLevel*> swapTable;
 
 	const size_t RAM = 0;
@@ -63,7 +64,7 @@ public:
 		
 	void UpdateRamBlockId(size_t blockId, size_t id); 
 	void Swap(size_t blockIndex, size_t swapLevel); 
-	void Swap(size_t blockIndex); 
+	size_t Swap(size_t blockIndex); 
 
 	void Print();  // DEBUG
 
