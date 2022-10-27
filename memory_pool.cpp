@@ -72,8 +72,14 @@ MemoryBlock MemoryPool::getBlock() {
 	std::cout << "getBlock()" << std::endl;
     void *ptr = privateAlloc();
 
-	// TODO
 	size_t blockId = 0;
+	if(!ptr) {
+		// No free blocks in pool, try to use swap
+
+		size_t blockIndex = rand() % numBlocks;  // Random block for tests!!!
+
+		blockId = swap->Swap(blockIndex);
+	}
 
     return MemoryBlock{ptr, blockId, blockSize, this};
 }
@@ -85,8 +91,8 @@ void* MemoryPool::privateAlloc() {
         return block;
     }
 
-    // No free blocks -> try to use swap file
-    return nullptr; // TODO!!!
+    // No free blocks
+    return nullptr;
 }
 
 void MemoryPool::privateFree(void *ptr, size_t id) {
