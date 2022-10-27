@@ -36,7 +36,7 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
         size_t size = 1 + rand() % max_block_size;
         size = std::min(size, filesize - readed);
 
-        MemoryBlock mb = memoryPool.getBlock();
+        MemoryBlock mb = memoryPool.getBlock(size);
         char *buf = mb.getPtr<char>();
 		std::cout << "buf: " << (void*)buf << std::endl;
 		std::cout << "size: "<< size << std::endl;

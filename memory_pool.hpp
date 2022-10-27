@@ -16,13 +16,14 @@ class MemoryBlock {
     void* ptr;
     size_t id;
     size_t blockSize;
+	size_t getSize; 
     MemoryPool *pool;
 
 //    MemoryBlock(const MemoryBlock&) = delete;
 //    MemoryBlock &operator=(const MemoryBlock &) = delete;
 
   public:
-    MemoryBlock(void *ptr, size_t id, size_t size, MemoryPool *pool);
+    MemoryBlock(void *ptr, size_t id, size_t blockSize, size_t getSize, MemoryPool *pool);
 
     template <typename T = char> T *getPtr() {
         lock();
@@ -30,6 +31,8 @@ class MemoryBlock {
     }
 
     size_t size();
+	size_t capacity(); 
+
     void lock();
     void unlock();
     void free();
@@ -65,6 +68,6 @@ class MemoryPool {
 	void lockBlock(void *ptr); 
 	void unlockBlock(void *ptr); 
 
-    MemoryBlock getBlock();
+    MemoryBlock getBlock(size_t size);
 	void freeBlock(void* ptr, size_t id); 
 };

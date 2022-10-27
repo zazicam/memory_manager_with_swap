@@ -16,11 +16,15 @@ using namespace std::chrono_literals;
 // --------------------------------------------------------
 // class MemoryBlock
 // --------------------------------------------------------
-MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t size, MemoryPool *pool)
-    : ptr(ptr), id(id), blockSize(size), pool(pool) {}
+MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t blockSize, size_t getSize, MemoryPool *pool)
+    : ptr(ptr), id(id), blockSize(blockSize), getSize(getSize), pool(pool) {}
 
 size_t MemoryBlock::size() {
-    return blockSize;
+    return getSize;
+}
+
+size_t MemoryBlock::capacity() {
+	return blockSize;
 }
 
 void MemoryBlock::lock() {
@@ -72,10 +76,10 @@ MemoryPool::~MemoryPool() {
     delete swap;
 }
 
-MemoryBlock MemoryPool::getBlock() {
-	std::cout << "getBlock()" << std::endl;
+MemoryBlock MemoryPool::getBlock(size_t size) {
+	std::cout << "getBlock() with size = " << size << std::endl;
 	size_t blockId = 0;
-    void *ptr = malloc(blockSize); // privateAlloc();
+    void *ptr = privateAlloc();
 
 	if(!ptr) {
 		std::cout << "No free blocks in the pool! AAAAA!!!!!" << std::endl;
@@ -87,7 +91,7 @@ MemoryBlock MemoryPool::getBlock() {
 		blockId = swap->Swap(blockIndex);
 	}
 
-    return MemoryBlock{ptr, blockId, blockSize, this};
+    return MemoryBlock{ptr, blockId, blockSize, size, this};
 }
 
 void* MemoryPool::privateAlloc() {
