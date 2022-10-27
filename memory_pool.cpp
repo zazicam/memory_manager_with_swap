@@ -16,27 +16,27 @@ using namespace std::chrono_literals;
 // --------------------------------------------------------
 // class MemoryBlock
 // --------------------------------------------------------
-MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t blockSize, size_t getSize, MemoryPool *pool)
-    : ptr(ptr), id(id), blockSize(blockSize), getSize(getSize), pool(pool) {}
+MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size, MemoryPool *pool)
+    : ptr_(ptr), id_(id), capacity_(capacity), size_(size), pool_(pool) {}
 
 size_t MemoryBlock::size() {
-    return getSize;
+    return size_;
 }
 
 size_t MemoryBlock::capacity() {
-	return blockSize;
+	return capacity_;
 }
 
 void MemoryBlock::lock() {
-    pool->lockBlock(ptr);
+    pool_->lockBlock(ptr_);
 }
 
 void MemoryBlock::unlock() {
-    pool->unlockBlock(ptr);
+    pool_->unlockBlock(ptr_);
 }
 
 void MemoryBlock::free() {
-    pool->freeBlock(ptr, id);
+    pool_->freeBlock(ptr_, id_);
 }
 
 // --------------------------------------------------------

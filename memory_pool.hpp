@@ -13,21 +13,21 @@ class MemoryPool;
 // class MemoryBlock
 // --------------------------------------------------------
 class MemoryBlock {
-    void* ptr;
-    size_t id;
-    size_t blockSize;
-	size_t getSize; 
-    MemoryPool *pool;
+    void* ptr_;
+    size_t id_;
+    size_t capacity_;
+	size_t size_; 
+    MemoryPool *pool_;
 
 //    MemoryBlock(const MemoryBlock&) = delete;
 //    MemoryBlock &operator=(const MemoryBlock &) = delete;
 
   public:
-    MemoryBlock(void *ptr, size_t id, size_t blockSize, size_t getSize, MemoryPool *pool);
+    MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size, MemoryPool *pool);
 
     template <typename T = char> T *getPtr() {
         lock();
-        return static_cast<T *>(ptr);
+        return static_cast<T *>(ptr_);
     }
 
     size_t size();
