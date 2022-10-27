@@ -20,20 +20,15 @@ MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t size, MemoryPool *pool)
     : ptr(ptr), id(id), size(size), pool(pool) {}
 
 void MemoryBlock::lock() {
-	std::cout << "MemoryBlock::lock() started" << std::endl;
-	std::cout << "MemoryBlock::lock() ptr = " << ptr << std::endl;
-	std::cout << "MemoryBlock::lock() id = " << id << std::endl;
-	std::cout << "MemoryBlock::lock() size = " << size << std::endl;
-
-	std::cout << "MemoryBlock::lock() finished" << std::endl;
+    pool->lockBlock(ptr);
 }
 
 void MemoryBlock::unlock() {
-//    pool->unlockBlock(ptr);
+    pool->unlockBlock(ptr);
 }
 
 void MemoryBlock::free() {
-//    pool->privateFree(ptr, id);
+    pool->privateFree(ptr, id);
 }
 
 // --------------------------------------------------------
@@ -61,6 +56,9 @@ MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize)
     }
     nextBlock = memoryPtr;
 
+	// mutex for each block
+	blockMutex = std::vector<std::mutex>(numBlocks);
+
     // create disk swap
     swap = new DiskSwap(memoryPtr, numBlocks, blockSize);
 }
@@ -71,7 +69,7 @@ MemoryPool::~MemoryPool() {
 }
 
 MemoryBlock MemoryPool::getBlock() {
-	std::cout << "MemoryPool::getBlock() started" << std::endl;
+	std::cout << "getBlock()" << std::endl;
     void *ptr = privateAlloc();
 
 	// TODO
@@ -81,8 +79,6 @@ MemoryBlock MemoryPool::getBlock() {
 }
 
 void* MemoryPool::privateAlloc() {
-	std::cout << "MemoryPool::privateAlloc() started" << std::endl;
-
     if (nextBlock) {
         char *block = nextBlock;
         nextBlock = *reinterpret_cast<char **>(nextBlock);
@@ -90,16 +86,12 @@ void* MemoryPool::privateAlloc() {
     }
 
     // No free blocks -> try to use swap file
-
-	std::cout << "MemoryPool::privateAlloc() finished" << std::endl;
     return nullptr; // TODO!!!
 }
 
 void MemoryPool::privateFree(void *ptr, size_t id) {
-	std::cout << "MemoryPool::privateFree() started" << std::endl;
 	UNUSED(ptr);
 	UNUSED(id);
-	std::cout << "MemoryPool::privateFree() finished" << std::endl;
 }
 
 size_t MemoryPool::blockIndexByAddress(void *ptr) {
@@ -111,13 +103,9 @@ char* MemoryPool::blockAddressByIndex(size_t index) {
 }
 
 void MemoryPool::lockBlock(void *ptr) {
-	std::cout << "MemoryPool::lockBlock() started" << std::endl;
-	UNUSED(ptr);	
-	std::cout << "MemoryPool::lockBlock() finished" << std::endl;
+	blockMutex.at(blockIndexByAddress(ptr)).lock();
 }
 
 void MemoryPool::unlockBlock(void *ptr) {
-	std::cout << "MemoryPool::unlockBlock() started" << std::endl;
-	UNUSED(ptr);	
-	std::cout << "MemoryPool::unlockBlock() finished" << std::endl;
+	blockMutex.at(blockIndexByAddress(ptr)).unlock();
 }
