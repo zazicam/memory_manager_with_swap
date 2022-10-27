@@ -62,7 +62,9 @@ class DiskSwap {
 public:
 	DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize);
 		
-	void UpdateRamBlockId(size_t blockId, size_t id); 
+	void UpdateRamBlockId(size_t blockIndex, size_t id); 
+	void MarkFreed(size_t blockIndex, size_t id);
+
 	void Swap(size_t blockIndex, size_t swapLevel); 
 	size_t Swap(size_t blockIndex); 
 

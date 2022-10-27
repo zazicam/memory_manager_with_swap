@@ -124,8 +124,12 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 		new DiskSwapLevel(1, numBlocks, blockSize)
 	}) {}
 	
-void DiskSwap::UpdateRamBlockId(size_t blockId, size_t id) {
-	swapTable[RAM]->at(blockId) = id;
+void DiskSwap::UpdateRamBlockId(size_t blockIndex, size_t id) {
+	swapTable[RAM]->at(blockIndex) = id;
+}
+
+void DiskSwap::MarkFreed(size_t blockIndex, size_t id) {
+	swapTable[id]->at(blockIndex) = 0;
 }
 
 void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {

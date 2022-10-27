@@ -28,7 +28,7 @@ void MemoryBlock::unlock() {
 }
 
 void MemoryBlock::free() {
-    pool->privateFree(ptr, id);
+    pool->freeBlock(ptr, id);
 }
 
 // --------------------------------------------------------
@@ -76,7 +76,8 @@ MemoryBlock MemoryPool::getBlock() {
 	if(!ptr) {
 		// No free blocks in pool, try to use swap
 
-		size_t blockIndex = rand() % numBlocks;  // Random block for tests!!!
+		// Random block for tests!!!
+		size_t blockIndex = rand() % numBlocks;  
 
 		blockId = swap->Swap(blockIndex);
 	}
@@ -95,9 +96,10 @@ void* MemoryPool::privateAlloc() {
     return nullptr;
 }
 
-void MemoryPool::privateFree(void *ptr, size_t id) {
-	UNUSED(ptr);
-	UNUSED(id);
+void MemoryPool::privateFree(void *ptr) {
+	char* block = static_cast<char*>(ptr);
+	*reinterpret_cast<char **>(block) = nextBlock;
+	nextBlock = block;
 }
 
 size_t MemoryPool::blockIndexByAddress(void *ptr) {
@@ -114,4 +116,15 @@ void MemoryPool::lockBlock(void *ptr) {
 
 void MemoryPool::unlockBlock(void *ptr) {
 	blockMutex.at(blockIndexByAddress(ptr)).unlock();
+}
+
+void MemoryPool::freeBlock(void* ptr, size_t id) {
+	if(id > 0) {
+		// it's in swap, let's just mark it freed (in swapTable)
+		size_t blockIndex = blockIndexByAddress(ptr);
+		swap->MarkFreed(blockIndex, id);
+	} else {
+		// it's in ram
+		
+	}
 }
