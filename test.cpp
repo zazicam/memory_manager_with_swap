@@ -30,7 +30,7 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
 
     size_t readed = 0;
 
-	// 1. let's read whole input file into random blocks
+	// 1. read whole input file in random blocks [1 .. max_block_size] bytes
 	std::vector<MemoryBlock*> blocks;
     while (readed < filesize) {
         size_t size = 1 + rand() % max_block_size;
@@ -46,14 +46,16 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
     }
     fin.close();
 
-	// 2. let's write all blocks in output file 
+	// 2. write all blocks to the output file 
     if (!fout) {
         std::cout << "Can't open file " << filename2 << std::endl;
     }
 	
 	for(auto& mb : blocks) {
         mb->lock();
-        fout.write(mb->getPtr<char>(), mb->size());
+		char* buf = mb->getPtr<char>();
+		size_t size = mb->size();
+        fout.write(buf, size);
         mb->unlock();
         mb->free();
 	}
