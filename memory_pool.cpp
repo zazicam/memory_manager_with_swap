@@ -125,6 +125,8 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 		swap->MarkFreed(blockIndex, id);
 	} else {
 		// it's in ram
-		
+		// let's check if there are some swapped blocks for this blockIndex
+		// - if yes then let's find the last one (max swap level) and move it to the ram level
+		// - if there is not swap blocks then let's free this block for real (std::free)
 	}
 }
