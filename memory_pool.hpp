@@ -15,7 +15,7 @@ class MemoryPool;
 class MemoryBlock {
     void* ptr;
     size_t id;
-    size_t size;
+    size_t blockSize;
     MemoryPool *pool;
 
     MemoryBlock(const MemoryBlock&) = delete;
@@ -29,6 +29,7 @@ class MemoryBlock {
         return static_cast<T *>(ptr);
     }
 
+    size_t size();
     void lock();
     void unlock();
     void free();

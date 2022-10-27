@@ -4,9 +4,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "check.hpp"
 #include "memory_pool.hpp"
@@ -23,9 +23,6 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
     if (!fin) {
         std::cout << "Can't open file " << filename1 << std::endl;
     }
-    if (!fout) {
-        std::cout << "Can't open file " << filename2 << std::endl;
-    }
 
     fin.seekg(0, std::ios::end);
     size_t filesize = fin.tellg();
@@ -33,24 +30,33 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
 
     size_t readed = 0;
 
+	// 1. let's read whole input file into random blocks
+	std::vector<MemoryBlock*> blocks;
     while (readed < filesize) {
         size_t size = 1 + rand() % max_block_size;
         size = std::min(size, filesize - readed);
 
         MemoryBlock mb = memoryPool.getBlock();
         char *buf = mb.getPtr<char>();
+		blocks.push_back(&mb);
 
         fin.read(buf, size);
         readed += size;
         mb.unlock();
-
-        mb.lock();
-        fout.write(buf, size);
-        mb.unlock();
-        mb.free();
     }
-
     fin.close();
+
+	// 2. let's write all blocks in output file 
+    if (!fout) {
+        std::cout << "Can't open file " << filename2 << std::endl;
+    }
+	
+	for(auto& mb : blocks) {
+        mb->lock();
+        fout.write(mb->getPtr<char>(), mb->size());
+        mb->unlock();
+        mb->free();
+	}
     fout.close();
 }
 

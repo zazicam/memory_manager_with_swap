@@ -17,7 +17,11 @@ using namespace std::chrono_literals;
 // class MemoryBlock
 // --------------------------------------------------------
 MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t size, MemoryPool *pool)
-    : ptr(ptr), id(id), size(size), pool(pool) {}
+    : ptr(ptr), id(id), blockSize(size), pool(pool) {}
+
+size_t MemoryBlock::size() {
+    return blockSize;
+}
 
 void MemoryBlock::lock() {
     pool->lockBlock(ptr);
