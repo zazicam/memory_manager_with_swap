@@ -9,6 +9,9 @@
 
 class MemoryPool;
 
+// --------------------------------------------------------
+// class MemoryBlock
+// --------------------------------------------------------
 class MemoryBlock {
     void* ptr;
     size_t id;
@@ -28,6 +31,9 @@ class MemoryBlock {
     void free();
 };
 
+// --------------------------------------------------------
+// class MemoryPool
+// --------------------------------------------------------
 class MemoryPool {
     friend class MemoryBlock;
 
