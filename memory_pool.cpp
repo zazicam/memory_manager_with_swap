@@ -13,92 +13,39 @@ using namespace std::chrono_literals;
 
 #define UNUSED(var) ((void)var) // for debug
 
-// class BlockAddress
 // --------------------------------------------------------
-BlockAddress::BlockAddress() : inMemory(true), memoryAddress(nullptr) {}
-
-BlockAddress::BlockAddress(void *memoryAddress)
-    : inMemory(true), memoryAddress(memoryAddress) {}
-
-void BlockAddress::moveToFile(size_t fileAddress) {
-    inMemory = false;
-    this->fileAddress = fileAddress;
-}
-
-void BlockAddress::moveToMemory() { inMemory = true; }
-
-bool BlockAddress::isInMemory() { return inMemory; }
-
-bool BlockAddress::isInSwap() { return !inMemory; }
-
-void *BlockAddress::getMemoryAddress() { return memoryAddress; }
-
-size_t BlockAddress::getFileAddress() { return fileAddress; }
-
 // class MemoryBlock
 // --------------------------------------------------------
-MemoryBlock::MemoryBlock(size_t id, void *ptr, size_t size, MemoryPool *pool)
-    : id(id), ptr(ptr), size(size), pool(pool) {}
+MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t size, MemoryPool *pool)
+    : ptr(ptr), id(id), size(size), pool(pool) {}
 
 void MemoryBlock::lock() {
+	std::cout << "MemoryBlock::lock() started" << std::endl;
+	std::cout << "MemoryBlock::lock() ptr = " << ptr << std::endl;
+	std::cout << "MemoryBlock::lock() id = " << id << std::endl;
+	std::cout << "MemoryBlock::lock() size = " << size << std::endl;
 
-    //	std::cout << "lock()" << std::endl;
-
-    pool->poolMutex.lock();
-    BlockAddress blockAddr = pool->blockAddress.at(id);
-    if (blockAddr.isInSwap()) {
-        size_t filePos = blockAddr.getFileAddress();
-        void *memAddr = blockAddr.getMemoryAddress();
-
-        // wait until origin block is unlocked
-        bool done = false;
-        while (!done) {
-            pool->blockStateMutex.lock();
-
-            size_t blockIndex = pool->blockIndexByAddress(memAddr);
-            //			std::cout << "blockIndex: " << blockIndex <<
-            // std::endl;
-            MemoryBlockState blockState = pool->blockState.at(blockIndex);
-            done = !blockState.locked;
-
-            pool->blockStateMutex.unlock();
-
-            if (!done)
-                std::this_thread::sleep_for(10ms);
-        }
-
-        pool->swap->swap(filePos, memAddr, size);
-    }
-    pool->poolMutex.unlock();
-
-    std::lock_guard<std::mutex> guard(pool->blockStateMutex);
-    pool->lockBlock(ptr);
+	std::cout << "MemoryBlock::lock() finished" << std::endl;
 }
 
 void MemoryBlock::unlock() {
-    std::lock_guard<std::mutex> guard(pool->blockStateMutex);
-    pool->unlockBlock(ptr);
+//    pool->unlockBlock(ptr);
 }
 
 void MemoryBlock::free() {
-    std::lock_guard<std::mutex> guard(pool->poolMutex);
-    pool->privateFree(ptr, id);
+//    pool->privateFree(ptr, id);
 }
 
+// --------------------------------------------------------
 // class MemoryPool
 // --------------------------------------------------------
-size_t MemoryPool::blocksCounter;
-
-MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize) {
+MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize) 
+	: numBlocks(numBlocks), 
+	blockSize(blockSize),
+	totalSize(numBlocks * blockSize)
+{
     assert(numBlocks > 0);
-    assert(
-        blockSize >=
-        sizeof(
-            char *)); // empty block contains a pointer to the next empty block
-
-    this->numBlocks = numBlocks;
-    this->blockSize = blockSize;
-    this->totalSize = numBlocks * blockSize;
+    assert(blockSize >= sizeof(char*)); // empty block contains a pointer to the next empty block
 
     memoryPtr = static_cast<char *>(malloc(totalSize));
     if (!memoryPtr) {
@@ -114,44 +61,28 @@ MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize) {
     }
     nextBlock = memoryPtr;
 
-    // locked blocks info
-    blockState.resize(numBlocks, {0, false});
-    unlockedBlocksCounter = 0;
-
-    // create swap
-    swap = new Swap(1024, blockSize);
+    // create disk swap
+    swap = new DiskSwap(memoryPtr, numBlocks, blockSize);
 }
 
 MemoryPool::~MemoryPool() {
     std::free(memoryPtr);
-    std::free(swap);
+    delete swap;
 }
 
 MemoryBlock MemoryPool::getBlock() {
-    //	std::cout << "getBlock()" << std::endl;
-    std::lock_guard<std::mutex> guard(poolMutex);
-
+	std::cout << "MemoryPool::getBlock() started" << std::endl;
     void *ptr = privateAlloc();
-    size_t blockId = ++blocksCounter;
 
-    blockStateMutex.lock();
+	// TODO
+	size_t blockId = 0;
 
-    size_t blockIndex = blockIndexByAddress(ptr);
-    //	std::cout << "blockIndex: " << blockIndex << std::endl;
-
-    blockState.at(blockIndex).id = blockId; // WRONG INDEX HERE!!!
-
-    ++unlockedBlocksCounter;
-    blockStateMutex.unlock();
-
-    blockAddress[blockId] = BlockAddress(ptr);
-
-    //	std::cout << "getBlock() almost end" << std::endl;
-
-    return MemoryBlock{blockId, ptr, blockSize, this};
+    return MemoryBlock{ptr, blockId, blockSize, this};
 }
 
-void *MemoryPool::privateAlloc() {
+void* MemoryPool::privateAlloc() {
+	std::cout << "MemoryPool::privateAlloc() started" << std::endl;
+
     if (nextBlock) {
         char *block = nextBlock;
         nextBlock = *reinterpret_cast<char **>(nextBlock);
@@ -159,61 +90,34 @@ void *MemoryPool::privateAlloc() {
     }
 
     // No free blocks -> try to use swap file
-    blockStateMutex.lock();
-    //	std::cout << "unlocked blocks count: " << unlockedBlocksCounter <<
-    // std::endl;
 
-    if (unlockedBlocksCounter == 0) {
-        std::cerr
-            << "MemoryPool::privateAlloc() no free blocks and all allocated "
-               "blocks are in use. "
-            << "No possible to use swap in that case! Just exit." << std::endl;
-        exit(2);
-    }
-
-    auto unusedBlockIt = std::find_if(
-        begin(blockState), end(blockState),
-        [](const MemoryBlockState &block) { return !block.locked; });
-    //	UNUSED(it);
-
-    size_t fileAddress = swap->alloc();
-    size_t blockId = unusedBlockIt->id;
-
-    //	std::cout << "privateAlloc()" << std::endl;
-
-    void *blockMemoryAddress = blockAddress.at(blockId).getMemoryAddress();
-    swap->write(fileAddress, blockMemoryAddress, blockSize);
-    blockAddress.at(blockId).moveToFile(fileAddress);
-
-    blockStateMutex.unlock();
-
-    return blockMemoryAddress;
-
-    //	return new char[blockSize]; // DEBUG ONLY!!!
+	std::cout << "MemoryPool::privateAlloc() finished" << std::endl;
+    return nullptr; // TODO!!!
 }
 
 void MemoryPool::privateFree(void *ptr, size_t id) {
-    BlockAddress block = blockAddress.at(id);
-    if (block.isInMemory()) {
-        char *block = static_cast<char *>(ptr);
-        *reinterpret_cast<char **>(block) = nextBlock;
-        nextBlock = block;
-    } else {
-        // if it's in the swap file
-        swap->free(block.getFileAddress());
-    }
+	std::cout << "MemoryPool::privateFree() started" << std::endl;
+	UNUSED(ptr);
+	UNUSED(id);
+	std::cout << "MemoryPool::privateFree() finished" << std::endl;
 }
 
 size_t MemoryPool::blockIndexByAddress(void *ptr) {
     return (static_cast<char *>(ptr) - memoryPtr) / blockSize;
 }
 
+char* MemoryPool::blockAddressByIndex(size_t index) {
+	return memoryPtr + index * blockSize;
+}
+
 void MemoryPool::lockBlock(void *ptr) {
-    blockState.at(blockIndexByAddress(ptr)).locked = true;
-    --unlockedBlocksCounter;
+	std::cout << "MemoryPool::lockBlock() started" << std::endl;
+	UNUSED(ptr);	
+	std::cout << "MemoryPool::lockBlock() finished" << std::endl;
 }
 
 void MemoryPool::unlockBlock(void *ptr) {
-    blockState.at(blockIndexByAddress(ptr)).locked = false;
-    ++unlockedBlocksCounter;
+	std::cout << "MemoryPool::unlockBlock() started" << std::endl;
+	UNUSED(ptr);	
+	std::cout << "MemoryPool::unlockBlock() finished" << std::endl;
 }

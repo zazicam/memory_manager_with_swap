@@ -1,30 +1,70 @@
 #pragma once
 
-#include <cstddef>
-#include <filesystem>
 #include <fstream>
-#include <string>
+#include <vector>
+#include <cstddef>
 
-class Swap {
-    size_t numBlocks;
-    size_t blockSize;
-    size_t totalSize;
+using uchar = unsigned char;
 
-    size_t nextBlock; // position of the next block in the swap file
+class SwapLevel {
+protected:
+	size_t level;
+	size_t numBlocks;
+	size_t blockSize;
+	size_t totalSize;
+	std::vector<uchar> blockId;
+public:
+	SwapLevel(size_t level, size_t numBlocks, size_t blockSize);
 
-    std::filesystem::path filepath;
-    std::fstream file;
+	uchar& at(size_t blockIndex); 
+	const uchar& at(size_t blockIndex) const; 
 
-    Swap(const Swap &) = delete;
-    Swap operator=(const Swap &) = delete;
-
-  public:
-    Swap(size_t numBlocks, size_t blockSize, std::string filename = "swap");
-    ~Swap();
-
-    size_t alloc();
-    void free(size_t pos);
-    void write(size_t pos, void *data, size_t size);
-    void read(size_t pos, void *data, size_t size);
-    void swap(size_t pos, void *data, size_t size);
+	virtual void WriteBlock(void* data, size_t blockIndex) = 0; 
+	virtual void ReadBlock(void* data, size_t blockIndex) = 0; 
+	
+	virtual ~SwapLevel();
 };
+
+class RamSwapLevel : public SwapLevel {
+	char* poolAddress;
+public:
+	RamSwapLevel(size_t level, size_t numBlocks, size_t blockSize, void* poolAddress);
+
+	void WriteBlock(void* data, size_t blockIndex) override;
+	void ReadBlock(void* data, size_t blockIndex) override; 
+
+	~RamSwapLevel() override; 
+};
+
+class DiskSwapLevel : public SwapLevel {
+	std::string filepath;
+	std::fstream file;
+public:
+	DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize);
+
+	void WriteBlock(void* data, size_t blockIndex) override; 
+	void ReadBlock(void* data, size_t blockIndex) override; 
+
+	~DiskSwapLevel() override;
+};
+
+class DiskSwap {
+	size_t numBlocks;
+	size_t blockSize;
+	uchar numLevels;
+	char* poolAddress;
+	std::vector<SwapLevel*> swapTable;
+
+	const size_t RAM = 0;
+public:
+	DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize);
+		
+	void UpdateRamBlockId(size_t blockId, size_t id); 
+	void Swap(size_t blockIndex, size_t swapLevel); 
+	void Swap(size_t blockIndex); 
+
+	void Print();  // DEBUG
+
+	~DiskSwap(); 
+};
+

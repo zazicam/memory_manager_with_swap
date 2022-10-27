@@ -1,95 +1,196 @@
 #include <cassert>
-#include <cstddef>
 #include <cstring>
-#include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <string>
+#include <fstream>
+#include <vector>
+#include <cstddef>
+#include <algorithm>
+#include <filesystem>
+#include <functional>
 
 #include "swap.hpp"
 
 namespace fs = std::filesystem;
 
-Swap::Swap(size_t numBlocks, size_t blockSize, std::string filename) {
-    assert(numBlocks > 0);
-    assert(blockSize >= sizeof(size_t)); // empty block contains address of the
-                                         // next empty block in file
-
-    this->numBlocks = numBlocks;
-    this->blockSize = blockSize;
-    this->totalSize = numBlocks * blockSize;
-
-    filepath = "./" + filename + "_" + std::to_string(numBlocks) + "_" +
-               std::to_string(blockSize) + ".bin";
-
-    // just to create a new file
-    std::ofstream tmp(filepath, std::ios::binary);
-    tmp.close();
-
-    try {
-        std::filesystem::resize_file(filepath, totalSize);
-    } catch (const fs::filesystem_error &) {
-        std::cerr << "Error: Swap() can't resize file to " << totalSize
-                  << " bytes" << std::endl;
-    }
-
-    file = std::move(std::fstream(filepath, std::ios::binary | std::ios::in |
-                                                std::ios::out));
-    if (!file) {
-        std::cerr << "Error: Swap() can't create file " << filepath
-                  << " for writing" << std::endl;
-        exit(1);
-    }
-
-    // create internal list of blocks
-    for (size_t i = 0; i < numBlocks; ++i) {
-        size_t pos = i * blockSize;
-        file.seekp(pos);
-        size_t nextPos = pos + blockSize;
-        file.write(reinterpret_cast<char *>(&nextPos), sizeof(nextPos));
-    }
-    nextBlock = 0;
+//-------------------------------------------------------------------
+// class SwapLevel
+//-------------------------------------------------------------------
+SwapLevel::SwapLevel(size_t level, size_t numBlocks, size_t blockSize)
+	: level(level), 
+	numBlocks(numBlocks),
+	blockSize(blockSize),
+	totalSize(numBlocks*blockSize),
+	blockId(std::vector<uchar>(numBlocks, 0)) 
+{
 }
 
-Swap::~Swap() {
-    file.close();
-    fs::remove(filepath);
+uchar& SwapLevel::at(size_t blockIndex) {
+	assert(blockIndex < numBlocks);
+	return blockId.at(blockIndex);
 }
 
-size_t Swap::alloc() {
-    if (nextBlock >= totalSize) {
-        std::cerr << "No free space in disk pool!" << std::endl;
-        exit(2);
-    }
-
-    size_t pos = nextBlock;
-    file.seekg(pos);
-    file.read(reinterpret_cast<char *>(&nextBlock), sizeof(nextBlock));
-    return pos;
+const uchar& SwapLevel::at(size_t blockIndex) const {
+	assert(blockIndex < numBlocks);
+	return blockId.at(blockIndex);
 }
 
-void Swap::free(size_t pos) {
-    file.seekp(pos);
-    file.write(reinterpret_cast<char *>(&nextBlock), sizeof(nextBlock));
-    nextBlock = pos;
+SwapLevel::~SwapLevel() {}
+
+//-------------------------------------------------------------------
+// class RamSwapLevel
+//-------------------------------------------------------------------
+RamSwapLevel::RamSwapLevel(size_t level, size_t numBlocks, size_t blockSize, void* poolAddress)
+: SwapLevel(level, numBlocks, blockSize),
+poolAddress(static_cast<char*>(poolAddress)) 
+{
+} 
+
+void RamSwapLevel::WriteBlock(void* data, size_t blockIndex) {
+	char* blockAddress = poolAddress + blockIndex * blockSize;
+	std::memcpy(blockAddress, data, blockSize);
 }
 
-void Swap::write(size_t pos, void *data, size_t size) {
-    assert(pos < totalSize);
-    file.seekp(pos);
-    file.write(reinterpret_cast<char *>(data), size);
+void RamSwapLevel::ReadBlock(void* data, size_t blockIndex) {
+	char* blockAddress = poolAddress + blockIndex * blockSize;
+	std::memcpy(data, blockAddress, blockSize);
 }
 
-void Swap::read(size_t pos, void *data, size_t size) {
-    assert(pos < totalSize);
-    file.seekg(pos);
-    file.read(reinterpret_cast<char *>(data), size);
+RamSwapLevel::~RamSwapLevel() {}
+
+//-------------------------------------------------------------------
+// class DiskLevel
+//-------------------------------------------------------------------
+DiskSwapLevel::DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize)
+	: SwapLevel(level, numBlocks, blockSize) 
+{
+	std::string filename = "swap";
+	filepath = "./" + filename + "_" 
+		+ std::to_string(numBlocks) + "x" 
+		+ std::to_string(blockSize) + "_"
+		+ "L" + std::to_string(level) + ".bin";
+
+	// just to create a new file
+	std::ofstream tmp(filepath, std::ios::binary);
+	tmp.close();
+
+	try {
+		std::filesystem::resize_file(filepath, totalSize);
+	} catch (const fs::filesystem_error &) {
+		std::cerr << "Error: Swap() can't resize file to " << totalSize
+			<< " bytes" << std::endl;
+	}
+
+	file = std::move(
+		std::fstream(filepath, std::ios::binary | std::ios::in | std::ios::out)
+	);
+
+	if (!file) {
+		std::cerr << "Error: Swap() can't create file " << filepath
+			<< " for writing" << std::endl;
+		exit(1);
+	}
 }
 
-void Swap::swap(size_t pos, void *data, size_t size) {
-    assert(pos < totalSize);
-    std::unique_ptr<char> tmpBlock{new char[size]};
-    read(pos, tmpBlock.get(), size);
-    write(pos, data, size);
-    std::memcpy(data, tmpBlock.get(), size);
+void DiskSwapLevel::WriteBlock(void* data, size_t blockIndex) {
+	assert(blockIndex < numBlocks);
+	size_t pos = blockIndex*blockSize;
+	file.seekp(pos);
+	file.write(reinterpret_cast<char *>(data), blockSize);
 }
+
+void DiskSwapLevel::ReadBlock(void* data, size_t blockIndex) {
+	assert(blockIndex < numBlocks);
+	size_t pos = blockIndex*blockSize;
+	file.seekg(pos);
+	file.read(reinterpret_cast<char *>(data), blockSize);
+}
+
+DiskSwapLevel::~DiskSwapLevel() {
+	file.close();	
+	fs::remove(filepath);
+}
+
+//-------------------------------------------------------------------
+// class DiskSwap
+//-------------------------------------------------------------------
+DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize) 
+	: numBlocks(numBlocks),
+	blockSize(blockSize),
+	numLevels(2),
+	poolAddress(static_cast<char*>(poolAddress)),
+	swapTable({
+		new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
+		new DiskSwapLevel(1, numBlocks, blockSize)
+	}) {}
+	
+void DiskSwap::UpdateRamBlockId(size_t blockId, size_t id) {
+	swapTable[RAM]->at(blockId) = id;
+}
+
+void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
+	assert(blockIndex < numBlocks);
+	std::cout << "swap called for level " << swapLevel << std::endl;
+	std::unique_ptr<char> tmpBlock{new char[blockSize]};
+	swapTable[swapLevel]->ReadBlock(tmpBlock.get(), blockIndex);
+	char* blockAddress = poolAddress + blockIndex * blockSize;
+	swapTable[swapLevel]->WriteBlock(blockAddress, blockIndex);
+	swapTable[RAM]->WriteBlock(tmpBlock.get(), blockIndex);
+	
+	std::swap(swapTable[RAM]->at(blockIndex), swapTable[swapLevel]->at(blockIndex));
+}
+
+void DiskSwap::Swap(size_t blockIndex) {
+	// find first empty block in all existing levels for this blockIndex	
+	if(swapTable[RAM] == 0) {
+		std::cerr << "Swap::MoveToSwap(" << blockIndex << ")."
+		          << "No need to swap: ram block with this index is empty!" << std::endl;
+		return;
+	}
+
+	size_t swapLevel = 0;
+	for(size_t level=1;level<numLevels;++level) {
+		if(swapTable[level]->at(blockIndex) == 0) {
+			swapLevel = level;
+			break;
+		}
+	}
+
+	if(swapLevel == 0) {
+		swapTable.push_back( new DiskSwapLevel{numLevels, numBlocks, blockSize} );
+		swapLevel = numLevels;
+		++numLevels;
+	}
+
+	Swap(blockIndex, swapLevel);
+}
+
+void DiskSwap::Print() {
+	std::cout << "       ";
+	for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
+		std::cout << blockIndex << " ";
+	}
+	std::cout << "(blocks)" << std::endl;
+	std::cout << "      ";
+	for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
+		std::cout << "==";
+	}
+	std::cout << std::endl;
+
+	for(size_t level = 0; level < numLevels; ++level) {
+		std::cout << "lv " << level << " | "; 
+		for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
+			size_t value = static_cast<size_t>(swapTable[level]->at(blockIndex)); 
+			std::cout << value << " ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
+
+DiskSwap::~DiskSwap() {
+	for(SwapLevel* swapLevel : swapTable) {
+		delete swapLevel;
+	}
+}
+
+
