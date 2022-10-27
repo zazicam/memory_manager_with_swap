@@ -139,6 +139,19 @@ void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
 	std::swap(swapTable[RAM]->at(blockIndex), swapTable[swapLevel]->at(blockIndex));
 }
 
+size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
+	assert(blockIndex < numBlocks);
+	size_t swapLevel = 0;
+	for(size_t level=1;level<numLevels;++level) {
+		// id == 0 means this level is empty:
+		if(swapTable[level]->at(blockIndex) == 0) {
+			swapLevel = level;
+			break;
+		}
+	}
+	return swapLevel;
+}
+
 void DiskSwap::Swap(size_t blockIndex) {
 	// find first empty block in all existing levels for this blockIndex	
 	if(swapTable[RAM] == 0) {
@@ -147,15 +160,9 @@ void DiskSwap::Swap(size_t blockIndex) {
 		return;
 	}
 
-	size_t swapLevel = 0;
-	for(size_t level=1;level<numLevels;++level) {
-		if(swapTable[level]->at(blockIndex) == 0) {
-			swapLevel = level;
-			break;
-		}
-	}
-
+	size_t swapLevel = FindEmptyLevel(blockIndex);
 	if(swapLevel == 0) {
+		// empty level not found, let's create it!
 		swapTable.push_back( new DiskSwapLevel{numLevels, numBlocks, blockSize} );
 		swapLevel = numLevels;
 		++numLevels;
