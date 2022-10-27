@@ -14,7 +14,7 @@
 namespace fs = std::filesystem;
 
 const size_t max_block_size = 1024;
-MemoryPool memoryPool(10, max_block_size);
+MemoryPool memoryPool(1024*1024, max_block_size);
 
 void CopyFile(const std::string &filename1, const std::string &filename2) {
     std::ifstream fin(filename1, std::ios::binary);
@@ -54,7 +54,16 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
     fout.close();
 }
 
-void CopyAllFiles(const std::string &dir1, const std::string &dir2) {
+void CopyAllFilesInSingleThread(const std::string &dir1, const std::string &dir2) {
+    for (const auto &entry : fs::directory_iterator(dir1)) {
+        const std::string filename = entry.path().filename();
+        const std::string path1 = dir1 + "/" + filename;
+        const std::string path2 = dir2 + "/" + filename;
+		CopyFile(path1, path2);
+	}
+}
+
+void CopyAllFilesWithManyThreads(const std::string &dir1, const std::string &dir2) {
     std::vector<std::thread> threads;
     for (const auto &entry : fs::directory_iterator(dir1)) {
         const std::string filename = entry.path().filename();
@@ -76,7 +85,8 @@ int main() {
 
     fs::remove_all(fs::path(output_dir));
     fs::create_directory(output_dir);
-    CopyAllFiles(input_dir, output_dir);
+//    CopyAllFilesWithManyThreads(input_dir, output_dir);
+	CopyAllFilesInSingleThread(input_dir, output_dir);
 
     std::cout << "Copying completed" << std::endl;
 

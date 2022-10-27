@@ -42,7 +42,7 @@ class MemoryPool {
     size_t totalSize;
     char *memoryPtr;
     char *nextBlock;
-    std::mutex mutex;
+    std::vector<std::mutex> blockMutex;
     DiskSwap *swap;
 
     void *privateAlloc();
