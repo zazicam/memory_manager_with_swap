@@ -56,6 +56,8 @@ class DiskSwap {
 	std::vector<SwapLevel*> swapTable;
 
 	const size_t RAM = 0;
+
+	size_t FindEmptyLevel(size_t blockIndex); 
 public:
 	DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize);
 		
