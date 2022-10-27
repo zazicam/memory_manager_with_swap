@@ -50,7 +50,7 @@ class MemoryPool {
     char *memoryPtr;
     char *nextBlock;
     std::vector<std::mutex> blockMutex;
-    DiskSwap *swap;
+    DiskSwap *diskSwap;
 
     void *privateAlloc();
 	void privateFree(void *ptr); 
