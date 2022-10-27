@@ -18,8 +18,8 @@ class MemoryBlock {
     size_t blockSize;
     MemoryPool *pool;
 
-    MemoryBlock(const MemoryBlock&) = delete;
-    MemoryBlock &operator=(const MemoryBlock &) = delete;
+//    MemoryBlock(const MemoryBlock&) = delete;
+//    MemoryBlock &operator=(const MemoryBlock &) = delete;
 
   public:
     MemoryBlock(void *ptr, size_t id, size_t size, MemoryPool *pool);

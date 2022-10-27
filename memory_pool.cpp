@@ -74,10 +74,11 @@ MemoryPool::~MemoryPool() {
 
 MemoryBlock MemoryPool::getBlock() {
 	std::cout << "getBlock()" << std::endl;
-    void *ptr = privateAlloc();
-
 	size_t blockId = 0;
+    void *ptr = malloc(blockSize); // privateAlloc();
+
 	if(!ptr) {
+		std::cout << "No free blocks in the pool! AAAAA!!!!!" << std::endl;
 		// No free blocks in pool, try to use swap
 
 		// Random block for tests!!!
@@ -115,11 +116,13 @@ char* MemoryPool::blockAddressByIndex(size_t index) {
 }
 
 void MemoryPool::lockBlock(void *ptr) {
-	blockMutex.at(blockIndexByAddress(ptr)).lock();
+	UNUSED(ptr);
+//	blockMutex.at(blockIndexByAddress(ptr)).lock();
 }
 
 void MemoryPool::unlockBlock(void *ptr) {
-	blockMutex.at(blockIndexByAddress(ptr)).unlock();
+	UNUSED(ptr);
+//	blockMutex.at(blockIndexByAddress(ptr)).unlock();
 }
 
 void MemoryPool::freeBlock(void* ptr, size_t id) {
