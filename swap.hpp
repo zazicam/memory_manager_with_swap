@@ -59,11 +59,14 @@ class DiskSwap {
 	const size_t RAM = 0;
 
 	size_t FindEmptyLevel(size_t blockIndex); 
+	size_t FindSwapLevel(size_t blockIndex, size_t id); 
 public:
 	DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize);
 		
-	void UpdateRamBlockId(size_t blockIndex, size_t id); 
-	void MarkFreed(size_t blockIndex, size_t id);
+	void MarkBlockAllocated(size_t blockIndex, size_t id);
+	void MarkBlockFreed(size_t blockIndex, size_t level);
+
+	void LoadBlockIntoRam(size_t blockIndex, size_t id);
 
 	void Swap(size_t blockIndex, size_t swapLevel); 
 	size_t Swap(size_t blockIndex); 

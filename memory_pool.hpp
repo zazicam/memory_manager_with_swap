@@ -32,6 +32,7 @@ class MemoryBlock {
 
     size_t size();
 	size_t capacity(); 
+	void loadIntoRam();
 
     void lock();
     void unlock();
