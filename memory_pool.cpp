@@ -89,7 +89,7 @@ MemoryPool::~MemoryPool() {
 
 MemoryBlock MemoryPool::getBlock(size_t size) {
 	std::cout << "getBlock() with size = " << size << std::endl;
-	size_t blockId = 0;
+	size_t blockId = 1;
     void *ptr = privateAlloc();
 	size_t blockIndex;
 	if(ptr) {
