@@ -67,6 +67,8 @@ public:
 	void MarkBlockFreed(size_t blockIndex, size_t level);
 
 	void LoadBlockIntoRam(size_t blockIndex, size_t id);
+	bool HasSwappedBlocks(size_t blockIndex);
+	void ReturnLastSwappedBlockIntoRam(size_t blockIndex);
 
 	void Swap(size_t blockIndex, size_t swapLevel); 
 	size_t Swap(size_t blockIndex); 
