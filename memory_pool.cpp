@@ -91,20 +91,23 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 	std::cout << "getBlock() with size = " << size << std::endl;
 	size_t blockId = 0;
     void *ptr = privateAlloc();
-
-	if(!ptr) {
+	size_t blockIndex;
+	if(ptr) {
+		blockIndex = blockIndexByAddress(ptr);
+	} else {
 		std::cout << "No free blocks in the pool! AAAAA!!!!!" << std::endl;
 		// No free blocks in pool, try to use swap
 
 		// Random block for tests!!!
-		size_t blockIndex = rand() % numBlocks;  
+		blockIndex = rand() % numBlocks;  
 		ptr = blockAddressByIndex(blockIndex);
-		
-		std::cout << "getBlock() : blockIndex = " << blockIndex << std::endl;
-		std::cout << "getBlock() : blockAddress = " << ptr << std::endl;
 
-		blockId = diskSwap->Swap(blockIndex);
+		blockId = diskSwap->Swap(blockIndex); // returns unique id for each new block
 	}
+	std::cout << "getBlock() : blockIndex = " << blockIndex << std::endl;
+	std::cout << "getBlock() : blockAddress = " << ptr << std::endl;
+
+	diskSwap->MarkBlockAllocated(blockIndex, blockId);
 
 	std::cout << "getBlock() : finishing" << std::endl;
     return MemoryBlock{ptr, blockId, blockSize, size, this};

@@ -160,16 +160,16 @@ void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
 	assert(blockIndex < numBlocks);
 	std::cout << "swap called for level " << swapLevel << std::endl;
 	std::unique_ptr<char> tmpBlock{new char[blockSize]};
-	std::cout << "read tmp " << std::endl;
+//	std::cout << "read tmp " << std::endl;
 	swapTable[swapLevel]->ReadBlock(tmpBlock.get(), blockIndex);
 	char* blockAddress = poolAddress + blockIndex * blockSize;
-	std::cout << "write to file " << std::endl;
+//	std::cout << "write to file " << std::endl;
 	swapTable[swapLevel]->WriteBlock(blockAddress, blockIndex);
-	std::cout << "write to ram " << std::endl;
+//	std::cout << "write to ram " << std::endl;
 	swapTable[RAM]->WriteBlock(tmpBlock.get(), blockIndex);
-	std::cout << "swap in swapTable " << std::endl;
+//	std::cout << "swap in swapTable " << std::endl;
 	std::swap(swapTable[RAM]->at(blockIndex), swapTable[swapLevel]->at(blockIndex));
-	std::cout << "swap finished " << std::endl;
+//	std::cout << "swap finished " << std::endl;
 
 }
 
@@ -204,6 +204,9 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 	std::cout << "DiskSwap::Swap() swapLevel: " << swapLevel << std::endl;	
 
 	Swap(blockIndex, swapLevel);
+
+	assert(swapId.at(blockIndex) < 255);
+
 	return swapId.at(blockIndex)++;
 }
 
