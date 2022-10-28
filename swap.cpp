@@ -186,6 +186,18 @@ size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
 	return swapLevel;
 }
 
+bool DiskSwap::HasSwappedBlocks(size_t blockIndex) {
+	size_t firstEmptyLevel = FindEmptyLevel(blockIndex);
+	return firstEmptyLevel > 0;
+}
+
+void DiskSwap::ReturnLastSwappedBlockIntoRam(size_t blockIndex) {
+	size_t lastSwapLevel = FindEmptyLevel(blockIndex) - 1;
+	char* ramBlockAddress = poolAddress + blockIndex * blockSize;
+	swapTable[lastSwapLevel]->ReadBlock(ramBlockAddress, blockIndex);
+	MarkBlockFreed(blockIndex, lastSwapLevel);
+}
+
 size_t DiskSwap::Swap(size_t blockIndex) {
 	// just check if pool block is empty (no need to swap in that case)
 	if(swapTable[RAM] == 0) {
