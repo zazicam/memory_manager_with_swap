@@ -123,13 +123,37 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 		new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
 		new DiskSwapLevel(1, numBlocks, blockSize)
 	}) {}
+
+void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
+	if(id == swapTable[RAM]->at(blockIndex)) {
+		std::cout << "Block is already in RAM" << std::endl;
+	} else {
+		size_t swapLevel = FindSwapLevel(blockIndex, id);	
+		Swap(blockIndex, swapLevel);
+		std::cout << "Block was loaded into RAM" << std::endl;
+	}
+}
+
+size_t DiskSwap::FindSwapLevel(size_t blockIndex, size_t id) {
+	assert(blockIndex < numBlocks);
+	size_t swapLevel = 0;
+	for(size_t level=1;level<numLevels;++level) {
+		// id == 0 means this level is empty:
+		if(id == swapTable[level]->at(blockIndex)) {
+			swapLevel = level;
+			break;
+		}
+	}
+	return swapLevel;
+}
 	
-void DiskSwap::UpdateRamBlockId(size_t blockIndex, size_t id) {
+void DiskSwap::MarkBlockAllocated(size_t blockIndex, size_t id) {
 	swapTable[RAM]->at(blockIndex) = id;
 }
 
-void DiskSwap::MarkFreed(size_t blockIndex, size_t id) {
-	swapTable[id]->at(blockIndex) = 0;
+void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
+	size_t level = FindSwapLevel(blockIndex, id);
+	swapTable[level]->at(blockIndex) = 0;
 }
 
 void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {

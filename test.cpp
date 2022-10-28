@@ -14,7 +14,7 @@
 namespace fs = std::filesystem;
 
 const size_t max_block_size = 1024;
-MemoryPool memoryPool(2, max_block_size);
+MemoryPool memoryPool(3, max_block_size);
 
 void CopyFile(const std::string &filename1, const std::string &filename2) {
     std::ifstream fin(filename1, std::ios::binary);

@@ -27,12 +27,19 @@ size_t MemoryBlock::capacity() {
 	return capacity_;
 }
 
-void MemoryBlock::lock() {
-	std::cout << "blockAddress: " << ptr_ << std::endl;
+void MemoryBlock::loadIntoRam() {
 	size_t blockIndex = pool_->blockIndexByAddress(ptr_);
+	pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);	
+}
+
+void MemoryBlock::lock() {
+	size_t blockIndex = pool_->blockIndexByAddress(ptr_);
+	std::cout << "blockAddress: " << ptr_ << std::endl;
 	std::cout << "blockIndex: " << blockIndex << std::endl;
-//	pool_->diskSwap->Swap(blockIndex, id_);
-    pool_->lockBlock(ptr_);
+
+	pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
+
+//    pool_->lockBlock(ptr_);
 }
 
 void MemoryBlock::unlock() {
@@ -129,7 +136,7 @@ char* MemoryPool::blockAddressByIndex(size_t index) {
 }
 
 void MemoryPool::lockBlock(void *ptr) {
-//	UNUSED(ptr);
+	UNUSED(ptr);
 //	blockMutex.at(blockIndexByAddress(ptr)).lock();
 }
 
@@ -142,7 +149,7 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 	if(id > 0) {
 		// it's in swap, let's just mark it freed (in swapTable)
 		size_t blockIndex = blockIndexByAddress(ptr);
-		diskSwap->MarkFreed(blockIndex, id);
+		diskSwap->MarkBlockFreed(blockIndex, id);
 	} else {
 		// it's in ram
 		// let's check if there are some swapped blocks for this blockIndex
