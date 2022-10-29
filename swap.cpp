@@ -146,14 +146,58 @@ size_t DiskSwap::FindSwapLevel(size_t blockIndex, size_t id) {
 	}
 	return swapLevel;
 }
+
+size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
+	assert(blockIndex < numBlocks);
+	size_t swapLevel = 0;
+	for(size_t level=1;level<numLevels;++level) {
+		// id == 0 means this level is empty:
+		if(swapTable[level]->at(blockIndex) == 0) {
+			swapLevel = level;
+			break;
+		}
+	}
+	return swapLevel;
+}
+
+size_t DiskSwap::FindLastLevel(size_t blockIndex) {
+	assert(blockIndex < numBlocks);
+	if(swapTable[0]->at(blockIndex) == 0)
+		return 0;
+
+	size_t lastLevel = numLevels-1;
+	for(size_t level=1;level<numLevels;++level) {
+		if(swapTable[level]->at(blockIndex) == 0) {
+			lastLevel = level - 1;
+			break;
+		}
+	}
+	return lastLevel;
+}
 	
 void DiskSwap::MarkBlockAllocated(size_t blockIndex, size_t id) {
 	swapTable[RAM]->at(blockIndex) = id;
 }
 
 void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
-	size_t level = FindSwapLevel(blockIndex, id);
-	swapTable[level]->at(blockIndex) = 0;
+	// we are to avoid holes (zeroes) inside the swap table
+	// so if it's the last level we can just put there 0
+	// else we'd better put there value from the last level
+	size_t goalLevel = FindSwapLevel(blockIndex, id);
+	size_t lastLevel = FindLastLevel(blockIndex);
+
+	if(lastLevel < 1) {
+		Print();
+		std::cout << "blockIndex: " << blockIndex << ", id: " << id << std::endl;
+		std::cout << "lastLevel: " << lastLevel << std::endl;
+	}
+	
+	assert(lastLevel >= 1);
+
+	if(goalLevel == lastLevel)
+		swapTable[goalLevel]->at(blockIndex) = 0; 
+	else
+		swapTable[goalLevel]->at(blockIndex) = swapTable[lastLevel]->at(blockIndex);
 }
 
 void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
@@ -173,22 +217,17 @@ void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
 
 }
 
-size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
-	assert(blockIndex < numBlocks);
-	size_t swapLevel = 0;
-	for(size_t level=1;level<numLevels;++level) {
-		// id == 0 means this level is empty:
-		if(swapTable[level]->at(blockIndex) == 0) {
-			swapLevel = level;
-			break;
-		}
-	}
-	return swapLevel;
+bool DiskSwap::isBlockInRam(size_t blockIndex, const size_t id) {
+	return id == swapTable[RAM]->at(blockIndex); 
+}
+
+bool DiskSwap::isBlockInSwap(size_t blockIndex, size_t id) {
+	return id != swapTable[RAM]->at(blockIndex); 
 }
 
 bool DiskSwap::HasSwappedBlocks(size_t blockIndex) {
-	size_t firstEmptyLevel = FindEmptyLevel(blockIndex);
-	return firstEmptyLevel > 0;
+	// it has if there is not 0 at the first swap level
+	return swapTable[1]->at(blockIndex) != 0;
 }
 
 void DiskSwap::ReturnLastSwappedBlockIntoRam(size_t blockIndex) {

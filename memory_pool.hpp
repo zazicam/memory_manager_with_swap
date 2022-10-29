@@ -26,13 +26,12 @@ class MemoryBlock {
     MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size, MemoryPool *pool);
 
     template <typename T = char> T *getPtr() {
-        lock();
+		std::cout << "getPtr()" << std::endl;
         return static_cast<T *>(ptr_);
     }
 
     size_t size();
 	size_t capacity(); 
-	void loadIntoRam();
 
     void lock();
     void unlock();
@@ -50,7 +49,10 @@ class MemoryPool {
     size_t totalSize;
     char *memoryPtr;
     char *nextBlock;
-    std::vector<std::mutex> blockMutex;
+	std::mutex poolMutex;
+	std::mutex swapMutex;
+	std::vector<std::mutex> blockMutex;
+
     DiskSwap *diskSwap;
 
     void *privateAlloc();
