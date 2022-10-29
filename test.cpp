@@ -17,8 +17,8 @@
 
 namespace fs = std::filesystem;
 
-const size_t max_block_size = 1;
-MemoryPool memoryPool(3, 8);
+const size_t max_block_size = 1024;
+MemoryPool memoryPool(1024, max_block_size);
 
 // DEBUG ONLY
 struct CheckBlock {
