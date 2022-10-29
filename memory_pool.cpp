@@ -10,6 +10,7 @@
 using namespace std::chrono_literals;
 
 #include "memory_pool.hpp"
+#include "logger.hpp"
 
 #define UNUSED(var) ((void)var) // for debug
 
@@ -36,7 +37,7 @@ void MemoryBlock::lock() {
 
 	pool_->swapMutex.lock();
 	pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
-	pool_->diskSwap->Print();
+	pool_->diskSwap->debugPrint();
 	pool_->swapMutex.unlock();
 }
 
@@ -48,6 +49,14 @@ void MemoryBlock::free() {
     pool_->freeBlock(ptr_, id_);
 }
 
+void MemoryBlock::debugPrint() {
+	LOG_BEGIN
+	logger << "Block Info: " << std::endl;
+	logger << "ptr: " << ptr_ << ", blockIndex: " << pool_->blockIndexByAddress(ptr_) << std::endl;
+	logger << "id: " << id_ << ", size: " << size_ << std::endl;
+	logger << std::endl;
+	LOG_END
+}
 // --------------------------------------------------------
 // class MemoryPool
 // --------------------------------------------------------
@@ -88,7 +97,10 @@ MemoryPool::~MemoryPool() {
 MemoryBlock MemoryPool::getBlock(size_t size) {
 	std::lock_guard<std::mutex> poolGuard(poolMutex);
 	swapMutex.lock();
-	std::cout << "getBlock() with size = " << size << std::endl;
+
+	LOG_BEGIN
+	logger << "getBlock() with size = " << size << std::endl;
+	LOG_END
 
 	size_t blockId = 1;
     void *ptr = privateAlloc();
@@ -96,7 +108,9 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 	if(ptr) {
 		blockIndex = blockIndexByAddress(ptr);
 	} else {
-		std::cout << "No free blocks in the pool! AAAAA!!!!!" << std::endl;
+		LOG_BEGIN
+		logger << "No free blocks in the pool! AAAAA!!!!!" << std::endl;
+		LOG_END
 		// No free blocks in pool, try to use swap
 		
 		// Random block for tests!!!
@@ -108,10 +122,12 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 	diskSwap->MarkBlockAllocated(blockIndex, blockId);
 	swapMutex.unlock();
 
-	std::cout << "getBlock() : blockIndex = " << blockIndex << std::endl;
+	LOG_BEGIN
+	logger << "getBlock() : blockIndex = " << blockIndex << std::endl;
+	LOG_END
 //	std::cout << "getBlock() : blockAddress = " << ptr << std::endl;
 //	std::cout << "getBlock() : finishing" << std::endl;
-	diskSwap->Print();
+	diskSwap->debugPrint();
 
     return MemoryBlock{ptr, blockId, blockSize, size, this};
 }

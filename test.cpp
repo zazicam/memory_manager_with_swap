@@ -8,6 +8,9 @@
 #include <thread>
 #include <vector>
 
+// debug only
+#include <cstring>
+
 #include "check.hpp"
 #include "memory_pool.hpp"
 
@@ -15,6 +18,13 @@ namespace fs = std::filesystem;
 
 const size_t max_block_size = 512;
 MemoryPool memoryPool(3, max_block_size);
+
+// DEBUG ONLY
+struct CheckBlock {
+	char data[max_block_size];
+	size_t size;
+};
+
 
 void CopyFile(const std::string &filename1, const std::string &filename2) {
     std::ifstream fin(filename1, std::ios::binary);
@@ -29,6 +39,9 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
     fin.seekg(0, std::ios::beg);
 
     size_t readed = 0;
+	
+	// debug only
+	std::vector<CheckBlock> checkBlocks;
 
 	// 1. read whole input file in random blocks [1 .. max_block_size] bytes
 	std::vector<MemoryBlock> blocks;
@@ -46,6 +59,13 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
 
         fin.read(buf, size);
         readed += size;
+
+		// debug only
+		CheckBlock cb;
+		cb.size = size;
+		std::memcpy(cb.data, buf, size); 
+		checkBlocks.push_back(cb);
+
         mb.unlock();
     }
     fin.close();
@@ -57,13 +77,21 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
         std::cout << "Can't open file " << filename2 << std::endl;
     }
 	
-	for(auto& mb : blocks) {
+	for(size_t i=0;i<blocks.size();++i) {
+		MemoryBlock& mb = blocks.at(i);
 		mb.lock();
 		char* buf = mb.getPtr<char>();
 		size_t size = mb.size();
 		std::cout << "buf: " << (void*)buf << std::endl;
 		std::cout << "size: "<< size << std::endl;
         fout.write(buf, size);
+
+		if(std::strncmp(checkBlocks.at(i).data, buf, size)) {
+			std::cout << "WRONG BLOCK!!!" << std::endl;
+			mb.debugPrint();
+			exit(1);
+		}
+
         mb.unlock();
 	}
     fout.close();

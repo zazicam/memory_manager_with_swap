@@ -36,6 +36,8 @@ class MemoryBlock {
     void lock();
     void unlock();
     void free();
+
+	void debugPrint();
 };
 
 // --------------------------------------------------------
