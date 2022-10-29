@@ -9,6 +9,7 @@
 #include <functional>
 
 #include "swap.hpp"
+#include "logger.hpp"
 
 namespace fs = std::filesystem;
 
@@ -118,7 +119,7 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 	blockSize(blockSize),
 	numLevels(2),
 	poolAddress(static_cast<char*>(poolAddress)),
-	swapId(std::vector<uchar>(numBlocks, 2)), // 0 - empty, 1 - ram level, 2..255 - swap levels
+	swapId(std::vector<uchar>(numBlocks, 2)), // 0 - empty, 1..255 - block ids 
 	swapTable({
 		new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
 		new DiskSwapLevel(1, numBlocks, blockSize)
@@ -262,26 +263,28 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 }
 
 void DiskSwap::Print() {
-	std::cout << "       ";
+	LOG_BEGIN
+	logger << "       ";
 	for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
-		std::cout << blockIndex << " ";
+		logger << blockIndex << " ";
 	}
-	std::cout << "(blocks)" << std::endl;
-	std::cout << "      ";
+	logger << "(blocks)" << std::endl;
+	logger << "      ";
 	for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
-		std::cout << "==";
+		logger << "==";
 	}
-	std::cout << std::endl;
+	logger << std::endl;
 
 	for(size_t level = 0; level < numLevels; ++level) {
-		std::cout << "lv " << level << " | "; 
+		logger << "lv " << level << " | "; 
 		for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
 			size_t value = static_cast<size_t>(swapTable.at(level)->at(blockIndex)); 
-			std::cout << value << " ";
+			logger << value << " ";
 		}
-		std::cout << std::endl;
+		logger << std::endl;
 	}
-	std::cout << std::endl;
+	logger << std::endl;
+	LOG_END
 }
 
 DiskSwap::~DiskSwap() {

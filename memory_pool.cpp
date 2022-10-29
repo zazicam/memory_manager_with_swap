@@ -31,11 +31,12 @@ void MemoryBlock::lock() {
     pool_->lockBlock(ptr_);
 
 	size_t blockIndex = pool_->blockIndexByAddress(ptr_);
-	std::cout << "blockAddress: " << ptr_ << std::endl;
-	std::cout << "blockIndex: " << blockIndex << std::endl;
+//	std::cout << "blockAddress: " << ptr_ << std::endl;
+//	std::cout << "blockIndex: " << blockIndex << std::endl;
 
 	pool_->swapMutex.lock();
 	pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
+	pool_->diskSwap->Print();
 	pool_->swapMutex.unlock();
 }
 
@@ -108,9 +109,9 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 	swapMutex.unlock();
 
 	std::cout << "getBlock() : blockIndex = " << blockIndex << std::endl;
-	std::cout << "getBlock() : blockAddress = " << ptr << std::endl;
-	std::cout << "getBlock() : finishing" << std::endl;
-//	diskSwap->Print();
+//	std::cout << "getBlock() : blockAddress = " << ptr << std::endl;
+//	std::cout << "getBlock() : finishing" << std::endl;
+	diskSwap->Print();
 
     return MemoryBlock{ptr, blockId, blockSize, size, this};
 }
