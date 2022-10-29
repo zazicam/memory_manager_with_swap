@@ -100,6 +100,8 @@ void DiskSwapLevel::WriteBlock(void* data, size_t blockIndex) {
 	size_t pos = blockIndex*blockSize;
 	file.seekp(pos);
 	file.write(reinterpret_cast<char *>(data), blockSize);
+	logger << "write to file: level = " << level  
+	<< ", blockIndex: " << blockIndex << ", value: " << (size_t)((char*)data)[0] << std::endl;
 }
 
 void DiskSwapLevel::ReadBlock(void* data, size_t blockIndex) {
@@ -107,6 +109,8 @@ void DiskSwapLevel::ReadBlock(void* data, size_t blockIndex) {
 	size_t pos = blockIndex*blockSize;
 	file.seekg(pos);
 	file.read(reinterpret_cast<char *>(data), blockSize);
+	logger << "read from file: level = " << level  
+	<< ", blockIndex: " << blockIndex << ", value: " << (size_t)((char*)data)[0] << std::endl;
 }
 
 DiskSwapLevel::~DiskSwapLevel() {
@@ -138,6 +142,7 @@ void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
 		Swap(blockIndex, swapLevel);
 		LOG_BEGIN
 		logger << "Block was loaded into RAM" << std::endl;
+        logger << "blockIndex: " << blockIndex << ", swapLevel: " << swapLevel << std::endl;
 		LOG_END
 	}
 }
@@ -275,13 +280,13 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 	return swapId.at(blockIndex)++;
 }
 
-uchar hash(uchar* data, size_t size) {
-	uchar res = 0;
-	for(size_t i = 0; i<size; ++i) {
-		res ^= data[i];
-	}
-	return res;
-}
+//char hash(char* data, size_t size) {
+//	char res = 0;
+//	for(size_t i = 0; i<size; ++i) {
+//		res ^= data[i];
+//	}
+//	return res;
+//}
 
 void DiskSwap::debugPrint() {
 	LOG_BEGIN
@@ -307,15 +312,27 @@ void DiskSwap::debugPrint() {
 	logger << std::endl;
 
 	logger << "data hashes: " << std::endl;
-	std::unique_ptr<uchar> tmpBlock{new uchar[blockSize]};
+	std::unique_ptr<char> tmpBlock{new char[blockSize]};
 
+	std::vector<std::vector<size_t>> temp(numLevels, std::vector<size_t>(numBlocks, 0));	
+
+	for(size_t level = 0; level < numLevels; ++level) {
+		for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
+			size_t value = static_cast<size_t>(swapTable.at(level)->at(blockIndex)); 
+			if(value !=0) {
+				swapTable.at(level)->ReadBlock(tmpBlock.get(), blockIndex);
+				temp.at(level).at(blockIndex) = (size_t)((char*)tmpBlock.get())[0];
+			}
+		}
+	}
+	
 	for(size_t level = 0; level < numLevels; ++level) {
 		logger << "lv " << level << " | "; 
 		for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
 			size_t value = static_cast<size_t>(swapTable.at(level)->at(blockIndex)); 
 			if(value !=0) {
-				swapTable.at(level)->ReadBlock(tmpBlock.get(), blockIndex);
-				size_t hashValue = static_cast<size_t>(hash(tmpBlock.get(), blockSize)); 
+				size_t hashValue = temp.at(level).at(blockIndex);
+				temp.at(level).at(blockIndex) = hashValue;
 				logger << std::setw(4) << hashValue << " ";
 			} else {
 				logger << std::setw(4) << "-" << " ";
