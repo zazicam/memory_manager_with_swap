@@ -8,6 +8,9 @@
 #include <filesystem>
 #include <functional>
 
+// debug only
+#include <iomanip>
+
 #include "swap.hpp"
 #include "logger.hpp"
 
@@ -127,11 +130,15 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 
 void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
 	if(id == swapTable.at(RAM)->at(blockIndex)) {
-		std::cout << "Block is already in RAM" << std::endl;
+		LOG_BEGIN
+		logger << "Block is already in RAM" << std::endl;
+		LOG_END
 	} else {
 		size_t swapLevel = FindSwapLevel(blockIndex, id);	
 		Swap(blockIndex, swapLevel);
-		std::cout << "Block was loaded into RAM" << std::endl;
+		LOG_BEGIN
+		logger << "Block was loaded into RAM" << std::endl;
+		LOG_END
 	}
 }
 
@@ -188,9 +195,11 @@ void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
 	size_t lastLevel = FindLastLevel(blockIndex);
 
 	if(lastLevel < 1) {
-		Print();
-		std::cout << "blockIndex: " << blockIndex << ", id: " << id << std::endl;
-		std::cout << "lastLevel: " << lastLevel << std::endl;
+		debugPrint();
+		LOG_BEGIN
+		logger << "blockIndex: " << blockIndex << ", id: " << id << std::endl;
+		logger << "lastLevel: " << lastLevel << std::endl;
+		LOG_END
 	}
 	
 	assert(lastLevel >= 1);
@@ -203,7 +212,9 @@ void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
 
 void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
 	assert(blockIndex < numBlocks);
-	std::cout << "swap called for level " << swapLevel << std::endl;
+	LOG_BEGIN
+	logger << "swap called for level " << swapLevel << std::endl;
+	LOG_END
 	std::unique_ptr<char> tmpBlock{new char[blockSize]};
 //	std::cout << "read tmp " << std::endl;
 	swapTable.at(swapLevel)->ReadBlock(tmpBlock.get(), blockIndex);
@@ -253,7 +264,9 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 		swapLevel = numLevels;
 		++numLevels;
 	}
-	std::cout << "DiskSwap::Swap() swapLevel: " << swapLevel << std::endl;	
+	LOG_BEGIN
+	logger << "DiskSwap::Swap() swapLevel: " << swapLevel << std::endl;	
+	LOG_END
 
 	Swap(blockIndex, swapLevel);
 
@@ -262,7 +275,15 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 	return swapId.at(blockIndex)++;
 }
 
-void DiskSwap::Print() {
+uchar hash(uchar* data, size_t size) {
+	uchar res = 0;
+	for(size_t i = 0; i<size; ++i) {
+		res ^= data[i];
+	}
+	return res;
+}
+
+void DiskSwap::debugPrint() {
 	LOG_BEGIN
 	logger << "       ";
 	for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
@@ -284,6 +305,27 @@ void DiskSwap::Print() {
 		logger << std::endl;
 	}
 	logger << std::endl;
+
+	logger << "data hashes: " << std::endl;
+	std::unique_ptr<uchar> tmpBlock{new uchar[blockSize]};
+
+	for(size_t level = 0; level < numLevels; ++level) {
+		logger << "lv " << level << " | "; 
+		for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
+			size_t value = static_cast<size_t>(swapTable.at(level)->at(blockIndex)); 
+			if(value !=0) {
+				swapTable.at(level)->ReadBlock(tmpBlock.get(), blockIndex);
+				size_t hashValue = static_cast<size_t>(hash(tmpBlock.get(), blockSize)); 
+				logger << std::setw(4) << hashValue << " ";
+			} else {
+				logger << std::setw(4) << "-" << " ";
+			}
+
+		}
+		logger << std::endl;
+	}
+	logger << std::endl;
+
 	LOG_END
 }
 

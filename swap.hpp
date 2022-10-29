@@ -78,7 +78,7 @@ public:
 	void Swap(size_t blockIndex, size_t swapLevel); 
 	size_t Swap(size_t blockIndex); 
 
-	void Print();  // DEBUG
+	void debugPrint();  // DEBUG
 
 	~DiskSwap(); 
 };
