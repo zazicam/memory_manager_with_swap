@@ -115,5 +115,8 @@ int main() {
 
     bool res = checkResult();
     std::cout << "Result: " << std::boolalpha << res << std::endl;
+	if(res == false) {
+		std::cout << "ALERT!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+	}
     return 0;
 }
