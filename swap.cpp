@@ -125,7 +125,7 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 	}) {}
 
 void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
-	if(id == swapTable[RAM]->at(blockIndex)) {
+	if(id == swapTable.at(RAM)->at(blockIndex)) {
 		std::cout << "Block is already in RAM" << std::endl;
 	} else {
 		size_t swapLevel = FindSwapLevel(blockIndex, id);	
@@ -139,7 +139,7 @@ size_t DiskSwap::FindSwapLevel(size_t blockIndex, size_t id) {
 	size_t swapLevel = 0;
 	for(size_t level=1;level<numLevels;++level) {
 		// id == 0 means this level is empty:
-		if(id == swapTable[level]->at(blockIndex)) {
+		if(id == swapTable.at(level)->at(blockIndex)) {
 			swapLevel = level;
 			break;
 		}
@@ -152,7 +152,7 @@ size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
 	size_t swapLevel = 0;
 	for(size_t level=1;level<numLevels;++level) {
 		// id == 0 means this level is empty:
-		if(swapTable[level]->at(blockIndex) == 0) {
+		if(swapTable.at(level)->at(blockIndex) == 0) {
 			swapLevel = level;
 			break;
 		}
@@ -162,12 +162,12 @@ size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
 
 size_t DiskSwap::FindLastLevel(size_t blockIndex) {
 	assert(blockIndex < numBlocks);
-	if(swapTable[0]->at(blockIndex) == 0)
+	if(swapTable.at(0)->at(blockIndex) == 0)
 		return 0;
 
 	size_t lastLevel = numLevels-1;
 	for(size_t level=1;level<numLevels;++level) {
-		if(swapTable[level]->at(blockIndex) == 0) {
+		if(swapTable.at(level)->at(blockIndex) == 0) {
 			lastLevel = level - 1;
 			break;
 		}
@@ -176,7 +176,7 @@ size_t DiskSwap::FindLastLevel(size_t blockIndex) {
 }
 	
 void DiskSwap::MarkBlockAllocated(size_t blockIndex, size_t id) {
-	swapTable[RAM]->at(blockIndex) = id;
+	swapTable.at(RAM)->at(blockIndex) = id;
 }
 
 void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
@@ -195,9 +195,9 @@ void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
 	assert(lastLevel >= 1);
 
 	if(goalLevel == lastLevel)
-		swapTable[goalLevel]->at(blockIndex) = 0; 
+		swapTable.at(goalLevel)->at(blockIndex) = 0; 
 	else
-		swapTable[goalLevel]->at(blockIndex) = swapTable[lastLevel]->at(blockIndex);
+		swapTable.at(goalLevel)->at(blockIndex) = swapTable.at(lastLevel)->at(blockIndex);
 }
 
 void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
@@ -205,41 +205,41 @@ void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
 	std::cout << "swap called for level " << swapLevel << std::endl;
 	std::unique_ptr<char> tmpBlock{new char[blockSize]};
 //	std::cout << "read tmp " << std::endl;
-	swapTable[swapLevel]->ReadBlock(tmpBlock.get(), blockIndex);
+	swapTable.at(swapLevel)->ReadBlock(tmpBlock.get(), blockIndex);
 	char* blockAddress = poolAddress + blockIndex * blockSize;
 //	std::cout << "write to file " << std::endl;
-	swapTable[swapLevel]->WriteBlock(blockAddress, blockIndex);
+	swapTable.at(swapLevel)->WriteBlock(blockAddress, blockIndex);
 //	std::cout << "write to ram " << std::endl;
-	swapTable[RAM]->WriteBlock(tmpBlock.get(), blockIndex);
+	swapTable.at(RAM)->WriteBlock(tmpBlock.get(), blockIndex);
 //	std::cout << "swap in swapTable " << std::endl;
-	std::swap(swapTable[RAM]->at(blockIndex), swapTable[swapLevel]->at(blockIndex));
+	std::swap(swapTable.at(RAM)->at(blockIndex), swapTable.at(swapLevel)->at(blockIndex));
 //	std::cout << "swap finished " << std::endl;
 
 }
 
 bool DiskSwap::isBlockInRam(size_t blockIndex, const size_t id) {
-	return id == swapTable[RAM]->at(blockIndex); 
+	return id == swapTable.at(RAM)->at(blockIndex); 
 }
 
 bool DiskSwap::isBlockInSwap(size_t blockIndex, size_t id) {
-	return id != swapTable[RAM]->at(blockIndex); 
+	return id != swapTable.at(RAM)->at(blockIndex); 
 }
 
 bool DiskSwap::HasSwappedBlocks(size_t blockIndex) {
 	// it has if there is not 0 at the first swap level
-	return swapTable[1]->at(blockIndex) != 0;
+	return swapTable.at(1)->at(blockIndex) != 0;
 }
 
 void DiskSwap::ReturnLastSwappedBlockIntoRam(size_t blockIndex) {
 	size_t lastSwapLevel = FindEmptyLevel(blockIndex) - 1;
 	char* ramBlockAddress = poolAddress + blockIndex * blockSize;
-	swapTable[lastSwapLevel]->ReadBlock(ramBlockAddress, blockIndex);
+	swapTable.at(lastSwapLevel)->ReadBlock(ramBlockAddress, blockIndex);
 	MarkBlockFreed(blockIndex, lastSwapLevel);
 }
 
 size_t DiskSwap::Swap(size_t blockIndex) {
 	// just check if pool block is empty (no need to swap in that case)
-	if(swapTable[RAM] == 0) {
+	if(swapTable.at(RAM) == 0) {
 		std::cerr << "Swap::MoveToSwap(" << blockIndex << ")."
 		          << "No need to swap: ram block with this index is empty!" << std::endl;
 		return 1; // id for ram level
@@ -276,7 +276,7 @@ void DiskSwap::Print() {
 	for(size_t level = 0; level < numLevels; ++level) {
 		std::cout << "lv " << level << " | "; 
 		for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
-			size_t value = static_cast<size_t>(swapTable[level]->at(blockIndex)); 
+			size_t value = static_cast<size_t>(swapTable.at(level)->at(blockIndex)); 
 			std::cout << value << " ";
 		}
 		std::cout << std::endl;
