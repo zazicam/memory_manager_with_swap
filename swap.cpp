@@ -289,6 +289,7 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 //}
 
 void DiskSwap::debugPrint() {
+	/*
 	LOG_BEGIN
 	logger << "       ";
 	for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
@@ -344,6 +345,7 @@ void DiskSwap::debugPrint() {
 	logger << std::endl;
 
 	LOG_END
+	*/
 }
 
 DiskSwap::~DiskSwap() {
