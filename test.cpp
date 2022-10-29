@@ -13,11 +13,12 @@
 
 #include "check.hpp"
 #include "memory_pool.hpp"
+#include "logger.hpp"
 
 namespace fs = std::filesystem;
 
-const size_t max_block_size = 512;
-MemoryPool memoryPool(3, max_block_size);
+const size_t max_block_size = 1;
+MemoryPool memoryPool(3, 8);
 
 // DEBUG ONLY
 struct CheckBlock {
@@ -51,10 +52,12 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
 
         MemoryBlock mb = memoryPool.getBlock(size);
 		mb.lock();
-		std::cout << "+1 block" << std::endl;
         char *buf = mb.getPtr<char>();
-		std::cout << "buf: " << (void*)buf << std::endl;
-		std::cout << "size: "<< size << std::endl;
+		LOG_BEGIN
+		logger << "+1 block" << std::endl;
+		logger << "buf: " << (void*)buf << std::endl;
+		logger << "size: "<< size << std::endl;
+		LOG_END
 		blocks.push_back(mb);
 
         fin.read(buf, size);
@@ -87,9 +90,13 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
         fout.write(buf, size);
 
 		if(std::strncmp(checkBlocks.at(i).data, buf, size)) {
-			std::cout << "WRONG BLOCK!!!" << std::endl;
+			LOG_BEGIN
+			logger << "WRONG BLOCK!!!" << std::endl;
+			logger << "wait for: " << (size_t)checkBlocks.at(i).data[0] << std::endl;
+			logger << "got: " << (size_t)buf[0] << std::endl;
+			LOG_END
 			mb.debugPrint();
-			exit(1);
+//			exit(1);
 		}
 
         mb.unlock();

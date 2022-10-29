@@ -95,7 +95,7 @@ MemoryPool::~MemoryPool() {
 }
 
 MemoryBlock MemoryPool::getBlock(size_t size) {
-	std::lock_guard<std::mutex> poolGuard(poolMutex);
+	poolMutex.lock();
 	swapMutex.lock();
 
 	LOG_BEGIN
@@ -116,11 +116,16 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 		// Random block for tests!!!
 		blockIndex = rand() % numBlocks;  
 		ptr = blockAddressByIndex(blockIndex);
-		
+
+	    poolMutex.unlock();
+        swapMutex.unlock();
+        lockBlock(ptr);	
+        poolMutex.lock();
+        swapMutex.lock();
 		blockId = diskSwap->Swap(blockIndex); // returns unique id for each new block
-	}
+        unlockBlock(ptr);	
+    }
 	diskSwap->MarkBlockAllocated(blockIndex, blockId);
-	swapMutex.unlock();
 
 	LOG_BEGIN
 	logger << "getBlock() : blockIndex = " << blockIndex << std::endl;
@@ -129,7 +134,11 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 //	std::cout << "getBlock() : finishing" << std::endl;
 	diskSwap->debugPrint();
 
-    return MemoryBlock{ptr, blockId, blockSize, size, this};
+    MemoryBlock block{ptr, blockId, blockSize, size, this};
+	swapMutex.unlock();
+    poolMutex.unlock();
+
+    return block;
 }
 
 void* MemoryPool::privateAlloc() {
