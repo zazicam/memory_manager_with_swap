@@ -147,11 +147,10 @@ int main() {
 //	CopyAllFilesInSingleThread(input_dir, output_dir);
 
     std::cout << "Copying completed" << std::endl;
+    std::cout << "Simple, but very slow (bytewise) checker started." << std::endl;
+    std::cout << "You can check it manually in folder 'output'! :)" << std::endl;
+	std::cout << "------------------------------------------------" << std::endl;
+	std::cout << std::endl;
 
-    bool res = checkResult();
-    std::cout << "Result: " << std::boolalpha << res << std::endl;
-	if(res == false) {
-		std::cout << "ALERT!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-	}
     return 0;
 }
