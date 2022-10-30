@@ -26,7 +26,7 @@ class MemoryBlock {
     MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size, MemoryPool *pool);
 
     template <typename T = char> T *getPtr() {
-		std::cout << "getPtr()" << std::endl;
+//		std::cout << "getPtr()" << std::endl;
         return static_cast<T *>(ptr_);
     }
 

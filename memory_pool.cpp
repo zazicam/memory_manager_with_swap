@@ -134,11 +134,10 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 //	std::cout << "getBlock() : finishing" << std::endl;
 	diskSwap->debugPrint();
 
-    MemoryBlock block{ptr, blockId, blockSize, size, this};
 	swapMutex.unlock();
     poolMutex.unlock();
 
-    return block;
+    return MemoryBlock {ptr, blockId, blockSize, size, this};
 }
 
 void* MemoryPool::privateAlloc() {

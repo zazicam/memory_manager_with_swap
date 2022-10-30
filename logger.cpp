@@ -18,7 +18,7 @@ void Logger::Lock() {
 }
 
 void Logger::Unlock() {
-	output << str();
+//	output << str();
 	str("");
 	Flush();
 	mutex.unlock();

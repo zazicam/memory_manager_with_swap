@@ -85,8 +85,8 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
 		mb.lock();
 		char* buf = mb.getPtr<char>();
 		size_t size = mb.size();
-		std::cout << "buf: " << (void*)buf << std::endl;
-		std::cout << "size: "<< size << std::endl;
+//		std::cout << "buf: " << (void*)buf << std::endl;
+//		std::cout << "size: "<< size << std::endl;
         fout.write(buf, size);
 
 		if(std::strncmp(checkBlocks.at(i).data, buf, size)) {
