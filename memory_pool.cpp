@@ -37,7 +37,7 @@ void MemoryBlock::lock() {
 
 	pool_->swapMutex.lock();
 	pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
-	pool_->diskSwap->debugPrint();
+//	pool_->diskSwap->debugPrint();
 	pool_->swapMutex.unlock();
 }
 
@@ -100,6 +100,7 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 
 	LOG_BEGIN
 	logger << "getBlock() with size = " << size << std::endl;
+//	diskSwap->debugPrint();
 	LOG_END
 
 	size_t blockId = 1;
@@ -129,13 +130,13 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 
 	LOG_BEGIN
 	logger << "getBlock() : blockIndex = " << blockIndex << std::endl;
-	LOG_END
 //	std::cout << "getBlock() : blockAddress = " << ptr << std::endl;
 //	std::cout << "getBlock() : finishing" << std::endl;
-	diskSwap->debugPrint();
+//	diskSwap->debugPrint();
+	LOG_END
 
 	swapMutex.unlock();
-    poolMutex.unlock();
+	poolMutex.unlock();
 
     return MemoryBlock {ptr, blockId, blockSize, size, this};
 }
@@ -186,9 +187,9 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 	size_t blockIndex = blockIndexByAddress(ptr);
 	LOG_BEGIN
 	logger << "freeBlock() index: " << blockIndex << ", id: " << id << std::endl;
-	LOG_END
 	logger << "Before: " << std::endl;
-	diskSwap->debugPrint();
+	LOG_END
+//	diskSwap->debugPrint();
 
 	if(diskSwap->isBlockInSwap(blockIndex, id)) {
 		// it's in swap, let's just mark it freed (in swapTable)
@@ -197,11 +198,11 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 		if(diskSwap->HasSwappedBlocks(blockIndex)) {
 			diskSwap->ReturnLastSwappedBlockIntoRam(blockIndex);
 		} else {
-			privateFree(ptr);	
+//			privateFree(ptr);	
 		}
 	}
 	logger << "After: " << std::endl;
-	diskSwap->debugPrint();
+//	diskSwap->debugPrint();
 
 	swapMutex.unlock();
 	poolMutex.unlock();
