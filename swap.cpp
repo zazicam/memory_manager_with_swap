@@ -101,7 +101,7 @@ void DiskSwapLevel::WriteBlock(void* data, size_t blockIndex) {
 	file.seekp(pos);
 	file.write(reinterpret_cast<char *>(data), blockSize);
 	logger << "write to file: level = " << level  
-	<< ", blockIndex: " << blockIndex << ", value: " << (size_t)((char*)data)[0] << std::endl;
+	<< ", blockIndex: " << blockIndex << ", value: " << (size_t)((uchar*)data)[0] << std::endl;
 }
 
 void DiskSwapLevel::ReadBlock(void* data, size_t blockIndex) {
@@ -110,7 +110,7 @@ void DiskSwapLevel::ReadBlock(void* data, size_t blockIndex) {
 	file.seekg(pos);
 	file.read(reinterpret_cast<char *>(data), blockSize);
 	logger << "read from file: level = " << level  
-	<< ", blockIndex: " << blockIndex << ", value: " << (size_t)((char*)data)[0] << std::endl;
+	<< ", blockIndex: " << blockIndex << ", value: " << (size_t)((uchar*)data)[0] << std::endl;
 }
 
 DiskSwapLevel::~DiskSwapLevel() {
@@ -135,14 +135,16 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
 	if(id == swapTable.at(RAM)->at(blockIndex)) {
 		LOG_BEGIN
-		logger << "Block is already in RAM" << std::endl;
+		logger << "Block is already in RAM blockIndex: " << blockIndex 
+			   << ", blockId: " << id << std::endl;
 		LOG_END
 	} else {
 		size_t swapLevel = FindSwapLevel(blockIndex, id);	
 		Swap(blockIndex, swapLevel);
 		LOG_BEGIN
 		logger << "Block was loaded into RAM" << std::endl;
-        logger << "blockIndex: " << blockIndex << ", swapLevel: " << swapLevel << std::endl;
+        logger << "blockIndex: " << blockIndex << ", swapLevel: " << swapLevel 
+		       << "id: " << id << std::endl;
 		LOG_END
 	}
 }
@@ -175,17 +177,17 @@ size_t DiskSwap::FindEmptyLevel(size_t blockIndex) {
 
 size_t DiskSwap::FindLastLevel(size_t blockIndex) {
 	assert(blockIndex < numBlocks);
-	if(swapTable.at(0)->at(blockIndex) == 0)
+	if(numLevels == 1)
 		return 0;
 
-	size_t lastLevel = numLevels-1;
-	for(size_t level=1;level<numLevels;++level) {
-		if(swapTable.at(level)->at(blockIndex) == 0) {
-			lastLevel = level - 1;
-			break;
-		}
-	}
-	return lastLevel;
+	size_t level = numLevels-1;
+	while(swapTable.at(level)->at(blockIndex) == 0)
+		--level;
+
+	LOG_BEGIN
+	logger << "FindLastLevel(): res = " << level << std::endl;
+	LOG_END
+	return level;
 }
 	
 void DiskSwap::MarkBlockAllocated(size_t blockIndex, size_t id) {
@@ -193,37 +195,18 @@ void DiskSwap::MarkBlockAllocated(size_t blockIndex, size_t id) {
 }
 
 void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
-	// we are to avoid holes (zeroes) inside the swap table
-	// so if it's the last level we can just put there 0
-	// else we'd better put there value from the last level
 	size_t goalLevel = FindSwapLevel(blockIndex, id);
-	size_t lastLevel = FindLastLevel(blockIndex);
-	LOG_BEGIN
-	logger << "goal level: " << goalLevel<< std::endl;
-	logger << "last level: " << lastLevel<< std::endl;
-	LOG_END
+	swapTable.at(goalLevel)->at(blockIndex) = 0; 
+	logger << "MarkBlockFreed(): blockIndex: " << blockIndex  
+	<< ", id: " << id << ", goal level: " << goalLevel<< std::endl;
 
-	if(lastLevel < 1) {
-		debugPrint();
-		LOG_BEGIN
-		logger << "blockIndex: " << blockIndex << ", id: " << id << std::endl;
-		logger << "lastLevel: " << lastLevel << std::endl;
-		LOG_END
-	}
+//		debugPrint();
+//		LOG_BEGIN
+//		logger << "blockIndex: " << blockIndex << ", id: " << id << std::endl;
+//		logger << "goal Level: " << goalLevel << std::endl;
+//		LOG_END
 	
-	assert(lastLevel >= 1);
 
-	if(goalLevel == lastLevel)
-		swapTable.at(goalLevel)->at(blockIndex) = 0; 
-	else {
-		// This was a bad idea to move blocks inside swap file, but 
-		// I decided to do it first...
-		std::unique_ptr<char> tmpBlock{new char[blockSize]};
-		swapTable.at(lastLevel)->ReadBlock(tmpBlock.get(), blockIndex);
-		swapTable.at(goalLevel)->WriteBlock(tmpBlock.get(), blockIndex);
-		swapTable.at(goalLevel)->at(blockIndex) = swapTable.at(lastLevel)->at(blockIndex);
-		swapTable.at(lastLevel)->at(blockIndex) = 0; 
-	}
 }
 
 void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
@@ -255,7 +238,12 @@ bool DiskSwap::isBlockInSwap(size_t blockIndex, size_t id) {
 
 bool DiskSwap::HasSwappedBlocks(size_t blockIndex) {
 	// it has if there is not 0 at the first swap level
-	return swapTable.at(1)->at(blockIndex) != 0;
+	for(size_t level = 1; level < numLevels; ++level) {
+		if(swapTable.at(level)->at(blockIndex) != 0) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void DiskSwap::ReturnLastSwappedBlockIntoRam(size_t blockIndex) {
@@ -269,7 +257,7 @@ void DiskSwap::ReturnLastSwappedBlockIntoRam(size_t blockIndex) {
 size_t DiskSwap::Swap(size_t blockIndex) {
 	// just check if pool block is empty (no need to swap in that case)
 	if(swapTable.at(RAM) == 0) {
-		std::cerr << "Swap::MoveToSwap(" << blockIndex << ")."
+		logger << "Swap::MoveToSwap(" << blockIndex << ")."
 		          << "No need to swap: ram block with this index is empty!" << std::endl;
 		return 1; // id for ram level
 	}
@@ -288,8 +276,9 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 	Swap(blockIndex, swapLevel);
 
 	assert(swapId.at(blockIndex) < 255);
-
-	return swapId.at(blockIndex)++;
+	size_t res = swapId.at(blockIndex);	
+	swapId.at(blockIndex)++;
+	return res; 
 }
 
 //char hash(char* data, size_t size) {
@@ -301,7 +290,6 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 //}
 
 void DiskSwap::debugPrint() {
-	LOG_BEGIN
 	logger << "       ";
 	for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
 		logger << blockIndex << " ";
@@ -354,8 +342,6 @@ void DiskSwap::debugPrint() {
 		logger << std::endl;
 	}
 	logger << std::endl;
-
-	LOG_END
 }
 
 DiskSwap::~DiskSwap() {
