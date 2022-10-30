@@ -198,6 +198,10 @@ void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
 	// else we'd better put there value from the last level
 	size_t goalLevel = FindSwapLevel(blockIndex, id);
 	size_t lastLevel = FindLastLevel(blockIndex);
+	LOG_BEGIN
+	logger << "goal level: " << goalLevel<< std::endl;
+	logger << "last level: " << lastLevel<< std::endl;
+	LOG_END
 
 	if(lastLevel < 1) {
 		debugPrint();
@@ -211,8 +215,15 @@ void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
 
 	if(goalLevel == lastLevel)
 		swapTable.at(goalLevel)->at(blockIndex) = 0; 
-	else
+	else {
+		// This was a bad idea to move blocks inside swap file, but 
+		// I decided to do it first...
+		std::unique_ptr<char> tmpBlock{new char[blockSize]};
+		swapTable.at(lastLevel)->ReadBlock(tmpBlock.get(), blockIndex);
+		swapTable.at(goalLevel)->WriteBlock(tmpBlock.get(), blockIndex);
 		swapTable.at(goalLevel)->at(blockIndex) = swapTable.at(lastLevel)->at(blockIndex);
+		swapTable.at(lastLevel)->at(blockIndex) = 0; 
+	}
 }
 
 void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
@@ -289,7 +300,6 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 //}
 
 void DiskSwap::debugPrint() {
-	/*
 	LOG_BEGIN
 	logger << "       ";
 	for(size_t blockIndex = 0; blockIndex < numBlocks; ++blockIndex) {
@@ -322,7 +332,7 @@ void DiskSwap::debugPrint() {
 			size_t value = static_cast<size_t>(swapTable.at(level)->at(blockIndex)); 
 			if(value !=0) {
 				swapTable.at(level)->ReadBlock(tmpBlock.get(), blockIndex);
-				temp.at(level).at(blockIndex) = (size_t)((char*)tmpBlock.get())[0];
+				temp.at(level).at(blockIndex) = (size_t)((uchar*)tmpBlock.get())[0];
 			}
 		}
 	}
@@ -345,7 +355,6 @@ void DiskSwap::debugPrint() {
 	logger << std::endl;
 
 	LOG_END
-	*/
 }
 
 DiskSwap::~DiskSwap() {
