@@ -259,10 +259,11 @@ bool DiskSwap::HasSwappedBlocks(size_t blockIndex) {
 }
 
 void DiskSwap::ReturnLastSwappedBlockIntoRam(size_t blockIndex) {
-	size_t lastSwapLevel = FindEmptyLevel(blockIndex) - 1;
-	char* ramBlockAddress = poolAddress + blockIndex * blockSize;
+	size_t lastSwapLevel = FindLastLevel(blockIndex); 
+	char* ramBlockAddress = poolAddress + blockIndex * blockSize; 
 	swapTable.at(lastSwapLevel)->ReadBlock(ramBlockAddress, blockIndex);
-	MarkBlockFreed(blockIndex, lastSwapLevel);
+	swapTable.at(RAM)->at(blockIndex) = swapTable.at(lastSwapLevel)->at(blockIndex);
+	swapTable.at(lastSwapLevel)->at(blockIndex) = 0; // mark freed
 }
 
 size_t DiskSwap::Swap(size_t blockIndex) {

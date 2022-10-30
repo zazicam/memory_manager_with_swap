@@ -179,11 +179,14 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 	UNUSED(ptr);
 	UNUSED(id);
 
-	size_t blockIndex = blockIndexByAddress(ptr);
-	std::cout << "freeBlock() index: " << blockIndex << ", id: " << id << std::endl;
 	lockBlock(ptr);
 	poolMutex.lock();
 	swapMutex.lock();
+
+	size_t blockIndex = blockIndexByAddress(ptr);
+	LOG_BEGIN
+	logger << "freeBlock() index: " << blockIndex << ", id: " << id << std::endl;
+	LOG_END
 	logger << "Before: " << std::endl;
 	diskSwap->debugPrint();
 
@@ -191,11 +194,11 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 		// it's in swap, let's just mark it freed (in swapTable)
 		diskSwap->MarkBlockFreed(blockIndex, id);
 	} else {
-//		if(diskSwap->HasSwappedBlocks(blockIndex)) {
-//			diskSwap->ReturnLastSwappedBlockIntoRam(blockIndex);
-//		} else {
-//			privateFree(ptr);	
-//		}
+		if(diskSwap->HasSwappedBlocks(blockIndex)) {
+			diskSwap->ReturnLastSwappedBlockIntoRam(blockIndex);
+		} else {
+			privateFree(ptr);	
+		}
 	}
 	logger << "After: " << std::endl;
 	diskSwap->debugPrint();
