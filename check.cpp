@@ -71,7 +71,10 @@ int main() {
     bool res = checkResult();
     std::cout << "Result: " << std::boolalpha << res << std::endl;
 	if(res == false) {
-		std::cout << "ALERT!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		std::cerr << "ERROR!" << std::endl;
+		return 1;
+	} else {
+		std::cerr << "[OK]" << std::endl;
 	}
 	return 0;
 }
