@@ -29,12 +29,12 @@ size_t MemoryBlock::capacity() {
 }
 
 void MemoryBlock::lock() {
-    pool_->lockBlock(ptr_);
 
 	size_t blockIndex = pool_->blockIndexByAddress(ptr_);
 //	std::cout << "blockAddress: " << ptr_ << std::endl;
 //	std::cout << "blockIndex: " << blockIndex << std::endl;
 
+    pool_->lockBlock(ptr_);
 	pool_->swapMutex.lock();
 	pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
 //	pool_->diskSwap->debugPrint();
@@ -84,8 +84,8 @@ MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize)
 
     nextBlock = memoryPtr;
 
-	// mutex for each block
-	blockMutex = std::vector<std::mutex>(numBlocks);
+	// locker for each block
+	blockIsLocked.resize(numBlocks);
 
     // create disk swap
     diskSwap = new DiskSwap(memoryPtr, numBlocks, blockSize);
@@ -188,13 +188,18 @@ char* MemoryPool::blockAddressByIndex(size_t index) {
 }
 
 void MemoryPool::lockBlock(void *ptr) {
-//	UNUSED(ptr);
-	blockMutex.at(blockIndexByAddress(ptr)).lock();
+	size_t blockIndex = blockIndexByAddress(ptr);
+	std::unique_lock<std::mutex> ul(blockMutex);
+	cv.wait(ul, [=]() { return blockIsLocked.at(blockIndex) == false; } );
+	blockIsLocked.at(blockIndexByAddress(ptr)) = true;
+	ul.unlock();
 }
 
 void MemoryPool::unlockBlock(void *ptr) {
-//	UNUSED(ptr);
-	blockMutex.at(blockIndexByAddress(ptr)).unlock();
+	std::unique_lock<std::mutex> ul(blockMutex);
+	blockIsLocked.at(blockIndexByAddress(ptr)) = false;
+	cv.notify_one();
+	ul.unlock();
 }
 
 void MemoryPool::freeBlock(void* ptr, size_t id) {
