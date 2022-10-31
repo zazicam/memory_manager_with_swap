@@ -17,11 +17,11 @@
 
 namespace fs = std::filesystem;
 
-//const size_t max_block_size = 1;
-//MemoryPool memoryPool(3, 8);
+const size_t max_block_size = 1;
+MemoryPool memoryPool(4, 8);
 
-const size_t max_block_size = 1024;
-MemoryPool memoryPool(1024, max_block_size);
+//const size_t max_block_size = 1024;
+//MemoryPool memoryPool(1024, max_block_size);
 
 // DEBUG ONLY
 struct CheckBlock {
@@ -95,8 +95,8 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
 		if(std::strncmp(checkBlocks.at(i).data, buf, size)) {
 			LOG_BEGIN
 			logger << "WRONG BLOCK!!!" << std::endl;
-			logger << "wait for: " << (size_t)checkBlocks.at(i).data[0] << std::endl;
-			logger << "got: " << (size_t)buf[0] << std::endl;
+			logger << "wait for: " << (size_t)(uchar)checkBlocks.at(i).data[0] << std::endl;
+			logger << "got: " << (size_t)(uchar)buf[0] << std::endl;
 			LOG_END
 			mb.debugPrint();
 //			exit(1);

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <cstddef>
+#include <mutex>
 
 using uchar = unsigned char;
 
@@ -27,6 +28,7 @@ public:
 
 class RamSwapLevel : public SwapLevel {
 	char* poolAddress;
+	std::mutex mutex;
 public:
 	RamSwapLevel(size_t level, size_t numBlocks, size_t blockSize, void* poolAddress);
 
@@ -39,6 +41,7 @@ public:
 class DiskSwapLevel : public SwapLevel {
 	std::string filepath;
 	std::fstream file;
+	std::mutex mutex;
 public:
 	DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize);
 
