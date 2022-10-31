@@ -17,11 +17,11 @@
 
 namespace fs = std::filesystem;
 
-const size_t max_block_size = 1;
-MemoryPool memoryPool(4, 8);
+//const size_t max_block_size = 1;
+//MemoryPool memoryPool(4, 8);
 
-//const size_t max_block_size = 1024;
-//MemoryPool memoryPool(1024, max_block_size);
+const size_t max_block_size = 1024;
+MemoryPool memoryPool(1024, max_block_size);
 
 // DEBUG ONLY
 struct CheckBlock {
@@ -145,9 +145,9 @@ int main() {
     fs::remove_all(fs::path(output_dir));
     fs::create_directory(output_dir);
 
-//    CopyAllFilesWithManyThreads(input_dir, output_dir);
+    CopyAllFilesWithManyThreads(input_dir, output_dir);
 
-	CopyAllFilesInSingleThread(input_dir, output_dir);
+//	CopyAllFilesInSingleThread(input_dir, output_dir);
 
     std::cout << "Copying completed" << std::endl;
     std::cout << "Simple, but very slow (bytewise) checker started." << std::endl;

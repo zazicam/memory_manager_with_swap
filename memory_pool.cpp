@@ -37,7 +37,7 @@ void MemoryBlock::lock() {
 
 	pool_->swapMutex.lock();
 	pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
-	pool_->diskSwap->debugPrint();
+//	pool_->diskSwap->debugPrint();
 	pool_->swapMutex.unlock();
 }
 
@@ -132,8 +132,13 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 		// Random block for tests!!!
 		blockIndex = rand() % numBlocks;  
 		ptr = blockAddressByIndex(blockIndex);
-		
+
+		std::cout << "block lock!" << std::endl;
+		std::cout.flush();
 		lockBlock(ptr);
+		std::cout << "blockLocked" << std::endl;
+		std::cout.flush();
+
 		swapMutex.lock();
 		blockId = diskSwap->Swap(blockIndex); // returns unique id for each new block
 		diskSwap->MarkBlockAllocated(blockIndex, blockId);
@@ -202,7 +207,7 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 	logger << "freeBlock() index: " << blockIndex << ", id: " << id << std::endl;
 	logger << "Before: " << std::endl;
 	LOG_END
-	diskSwap->debugPrint();
+//	diskSwap->debugPrint();
 
 	if(diskSwap->isBlockInSwap(blockIndex, id)) {
 		// it's in swap, let's just mark it freed (in swapTable)
@@ -218,7 +223,7 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 		}
 	}
 	logger << "After: " << std::endl;
-	diskSwap->debugPrint();
+//	diskSwap->debugPrint();
 
 	swapMutex.unlock();
 	unlockBlock(ptr);
