@@ -99,7 +99,7 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
 			logger << "got: " << (size_t)(uchar)buf[0] << std::endl;
 			LOG_END
 			mb.debugPrint();
-//			exit(1);
+			exit(1);
 		}
 
         mb.unlock();
@@ -145,9 +145,9 @@ int main() {
     fs::remove_all(fs::path(output_dir));
     fs::create_directory(output_dir);
 
-    CopyAllFilesWithManyThreads(input_dir, output_dir);
+//    CopyAllFilesWithManyThreads(input_dir, output_dir);
 
-//	CopyAllFilesInSingleThread(input_dir, output_dir);
+	CopyAllFilesInSingleThread(input_dir, output_dir);
 
     std::cout << "Copying completed" << std::endl;
     std::cout << "Simple, but very slow (bytewise) checker started." << std::endl;
