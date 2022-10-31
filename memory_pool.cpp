@@ -31,13 +31,9 @@ size_t MemoryBlock::capacity() {
 void MemoryBlock::lock() {
 
 	size_t blockIndex = pool_->blockIndexByAddress(ptr_);
-//	std::cout << "blockAddress: " << ptr_ << std::endl;
-//	std::cout << "blockIndex: " << blockIndex << std::endl;
-
     pool_->lockBlock(ptr_);
 	pool_->swapMutex.lock();
 	pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
-//	pool_->diskSwap->debugPrint();
 	pool_->swapMutex.unlock();
 }
 
@@ -232,6 +228,4 @@ void MemoryPool::freeBlock(void* ptr, size_t id) {
 
 	swapMutex.unlock();
 	unlockBlock(ptr);
-	poolMutex.unlock();
-	
 }
