@@ -50,17 +50,15 @@ poolAddress(static_cast<char*>(poolAddress))
 } 
 
 void RamSwapLevel::WriteBlock(void* data, size_t blockIndex) {
-	mutex.lock();
+	std::lock_guard<std::mutex> guard(mutex);
 	char* blockAddress = poolAddress + blockIndex * blockSize;
 	std::memcpy(blockAddress, data, blockSize);
-	mutex.unlock();
 }
 
 void RamSwapLevel::ReadBlock(void* data, size_t blockIndex) {
-	mutex.lock();
+	std::lock_guard<std::mutex> guard(mutex);
 	char* blockAddress = poolAddress + blockIndex * blockSize;
 	std::memcpy(data, blockAddress, blockSize);
-	mutex.unlock();
 }
 
 RamSwapLevel::~RamSwapLevel() {}
@@ -101,24 +99,22 @@ DiskSwapLevel::DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize)
 
 void DiskSwapLevel::WriteBlock(void* data, size_t blockIndex) {
 	assert(blockIndex < numBlocks);
-	mutex.lock();
+	std::lock_guard<std::mutex> guard(mutex);
 	size_t pos = blockIndex*blockSize;
 	file.seekp(pos);
 	file.write(reinterpret_cast<char *>(data), blockSize);
 	logger << "write to file: level = " << level  
 	<< ", blockIndex: " << blockIndex << ", value: " << (size_t)((uchar*)data)[0] << std::endl;
-	mutex.unlock();
 }
 
 void DiskSwapLevel::ReadBlock(void* data, size_t blockIndex) {
 	assert(blockIndex < numBlocks);
-	mutex.lock();
+	std::lock_guard<std::mutex> guard(mutex);
 	size_t pos = blockIndex*blockSize;
 	file.seekg(pos);
 	file.read(reinterpret_cast<char *>(data), blockSize);
 	logger << "read from file: level = " << level  
 	<< ", blockIndex: " << blockIndex << ", value: " << (size_t)((uchar*)data)[0] << std::endl;
-	mutex.unlock();
 }
 
 DiskSwapLevel::~DiskSwapLevel() {

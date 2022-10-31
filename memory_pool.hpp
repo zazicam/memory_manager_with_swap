@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstddef>
 #include <mutex>
+#include <condition_variable>
 #include <vector>
 
 #include "swap.hpp"
@@ -53,7 +54,10 @@ class MemoryPool {
     char *nextBlock;
 	std::mutex poolMutex;
 	std::mutex swapMutex;
-	std::vector<std::mutex> blockMutex;
+
+	std::mutex blockMutex;
+	std::condition_variable cv;
+	std::vector<bool> blockIsLocked;
 
     DiskSwap *diskSwap;
 
