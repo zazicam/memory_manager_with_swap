@@ -80,7 +80,7 @@ MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize)
         char *p = memoryPtr + i * blockSize;
         *reinterpret_cast<char **>(p) = static_cast<char *>(p + blockSize);
     }
-	*reinterpret_cast<char **>(memoryPtr+(numBlocks-1)*blockSize) = nullptr;
+	*reinterpret_cast<char**>(memoryPtr+(numBlocks-1)*blockSize) = nullptr;
 
     nextBlock = memoryPtr;
 
@@ -97,19 +97,19 @@ MemoryPool::~MemoryPool() {
 }
 
 MemoryBlock MemoryPool::getBlock(size_t size) {
-	poolMutex.lock();
+	std::lock_guard<std::mutex> poolGuard(poolMutex);
 
-	LOG_BEGIN
-	logger << "getBlock() with size = " << size << std::endl;
-	diskSwap->debugPrint();
-	logger << "OK" << std::endl;
-	LOG_END
+//	LOG_BEGIN
+//	logger << "getBlock() with size = " << size << std::endl;
+//	//diskSwap->debugPrint();
+//	logger << "OK" << std::endl;
+//	LOG_END
 
 	size_t blockId = 1;
     void *ptr = privateAlloc();
 
-	std::cout << "After privateAlloc()" << std::endl;
-	std::cout.flush();
+//	std::cout << "After privateAlloc()" << std::endl;
+//	std::cout.flush();
 
 	size_t blockIndex; 
 	if(ptr) {
@@ -118,9 +118,11 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 		logger << "pool allocated block: " << ptr 
 		<< ", blockIndex: " << blockIndex << std::endl;
 		LOG_END
+
 		swapMutex.lock();
 		diskSwap->MarkBlockAllocated(blockIndex, blockId);
 		swapMutex.unlock();
+
 	} else {
 		LOG_BEGIN
 		logger << "No free blocks in the pool! AAAAA!!!!!" << std::endl;
@@ -139,14 +141,11 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 		unlockBlock(ptr);
     }
 
-	LOG_BEGIN
-	logger << "getBlock() : blockIndex = " << blockIndex << std::endl;
+//	LOG_BEGIN
+//	logger << "getBlock() : blockIndex = " << blockIndex << std::endl;
 //	std::cout << "getBlock() : blockAddress = " << ptr << std::endl;
-//	std::cout << "getBlock() : finishing" << std::endl;
-	diskSwap->debugPrint();
-	LOG_END
-
-	poolMutex.unlock();
+//	//diskSwap->debugPrint();
+//	LOG_END
 
     return MemoryBlock {ptr, blockId, blockSize, size, this};
 }
@@ -194,10 +193,7 @@ void MemoryPool::unlockBlock(void *ptr) {
 }
 
 void MemoryPool::freeBlock(void* ptr, size_t id) {
-	UNUSED(ptr);
-	UNUSED(id);
-
-	poolMutex.lock();
+	std::lock_guard<std::mutex> poolGuard(poolMutex);
 	lockBlock(ptr);
 	swapMutex.lock();
 
