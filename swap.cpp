@@ -228,7 +228,7 @@ void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
 	LOG_BEGIN
 	logger << "swap called for level " << swapLevel << ", blockIndex: " << blockIndex << std::endl;
 	logger << "Before:" << std::endl;
-	debugPrint();
+//	debugPrint();
 	LOG_END
 	std::unique_ptr<char> tmpBlock{new char[blockSize]};
 //	std::cout << "read tmp " << std::endl;
@@ -243,7 +243,7 @@ void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
 //	std::cout << "swap finished " << std::endl;
 	LOG_BEGIN
 	logger << "After:" << std::endl;
-	debugPrint();
+//	debugPrint();
 	logger << std::endl;
 	LOG_END
 }
