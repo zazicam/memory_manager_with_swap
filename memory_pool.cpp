@@ -152,7 +152,9 @@ char* MemoryPool::blockAddressByIndex(size_t index) {
 void MemoryPool::lockBlock(void *ptr) {
 	size_t blockIndex = blockIndexByAddress(ptr);
 	std::unique_lock<std::mutex> ul(blockMutex);
-	cv.wait(ul, [=]() { return blockIsLocked.at(blockIndex) == false; } );
+	conditionVariable.wait(ul, [=]() { 
+		return blockIsLocked.at(blockIndex) == false; 
+	});
 	blockIsLocked.at(blockIndexByAddress(ptr)) = true;
 	ul.unlock();
 }
@@ -160,7 +162,7 @@ void MemoryPool::lockBlock(void *ptr) {
 void MemoryPool::unlockBlock(void *ptr) {
 	std::unique_lock<std::mutex> ul(blockMutex);
 	blockIsLocked.at(blockIndexByAddress(ptr)) = false;
-	cv.notify_one();
+	conditionVariable.notify_one();
 	ul.unlock();
 }
 

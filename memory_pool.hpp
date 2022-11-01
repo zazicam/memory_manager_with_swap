@@ -58,7 +58,7 @@ class MemoryPool {
 	std::mutex swapMutex;
 
 	std::mutex blockMutex;
-	std::condition_variable cv;
+	std::condition_variable conditionVariable;
 	std::vector<bool> blockIsLocked;
 
     DiskSwap *diskSwap;
