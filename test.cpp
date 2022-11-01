@@ -68,11 +68,6 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
     fin.close();
 
 	// 2. write all blocks to the output file 
-    if (!fout) {
-        std::cerr << "Can't open file " << filename2 << " for writing" << std::endl;
-		exit(1);
-    }
-	
 	for(size_t i=0;i<blocks.size();++i) {
 		MemoryBlock& mb = blocks.at(i);
 		mb.lock();

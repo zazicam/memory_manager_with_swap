@@ -15,7 +15,7 @@ class Logger: public std::ostringstream
 	std::ostream& output;
 	std::mutex mutex;
 public:
-	Logger(std::ostream& str);
+	explicit Logger(std::ostream& str);
 
 	void Flush();
 	void Lock(); 
