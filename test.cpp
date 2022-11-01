@@ -8,9 +8,6 @@
 #include <thread>
 #include <vector>
 
-// debug only
-#include <cstring>
-
 #include "check.hpp"
 #include "memory_pool.hpp"
 #include "logger.hpp"
@@ -21,15 +18,20 @@ namespace fs = std::filesystem;
 //const size_t max_block_size = 1;
 //MemoryPool memoryPool(3, 8);
 
-// small
-const size_t max_block_size = 8;
-MemoryPool memoryPool(3, max_block_size);
+// small 
+//const size_t max_block_size = 16;
+//MemoryPool memoryPool(3, max_block_size);
 
-// medium
+// medium files (~100Mb)
+const size_t max_block_size = 1024;
+MemoryPool memoryPool(1024, max_block_size);
+
+// large files (~2Gb)
 //const size_t max_block_size = 1024;
-//MemoryPool memoryPool(1024, max_block_size);
+//MemoryPool memoryPool(16 * 1024, max_block_size);
 
-void CopyFile(const std::string &filename1, const std::string &filename2) {
+
+void CopyFile(const fs::path &filename1, const fs::path &filename2) {
     std::ifstream fin(filename1, std::ios::binary);
     std::ofstream fout(filename2, std::ios::binary);
 
@@ -68,6 +70,11 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
     fin.close();
 
 	// 2. write all blocks to the output file 
+    if (!fout) {
+        std::cerr << "Can't open file " << filename2 << " for writing" << std::endl;
+		exit(1);
+    }
+	
 	for(size_t i=0;i<blocks.size();++i) {
 		MemoryBlock& mb = blocks.at(i);
 		mb.lock();
@@ -86,23 +93,26 @@ void CopyFile(const std::string &filename1, const std::string &filename2) {
 	}
 }
 
-void CopyAllFilesInSingleThread(const std::string &dir1, const std::string &dir2) {
+void CopyAllFilesInSingleThread(const fs::path &dir1, const fs::path &dir2) {
     for (const auto &entry : fs::directory_iterator(dir1)) {
-        const std::string filename = entry.path().filename();
-        const std::string path1 = dir1 + "/" + filename;
-        const std::string path2 = dir2 + "/" + filename;
+        const fs::path filename = entry.path().filename();
+        const fs::path path1 = dir1 / filename;
+        const fs::path path2 = dir2 / filename;
 		CopyFile(path1, path2);
 	}
 }
 
-void CopyAllFilesWithManyThreads(const std::string &dir1, const std::string &dir2) {
+void CopyAllFilesWithManyThreads(const fs::path &dir1, const fs::path &dir2) {
+    std::cout << "List of files in input folder '" << dir1 << "':" << std::endl;
     std::vector<std::thread> threads;
     for (const auto &entry : fs::directory_iterator(dir1)) {
-        const std::string filename = entry.path().filename();
-        const std::string path1 = dir1 + "/" + filename;
-        const std::string path2 = dir2 + "/" + filename;
+        const fs::path filename = entry.path().filename();
+        std::cout << filename << std::endl;
+        const fs::path path1 = dir1 / filename;
+        const fs::path path2 = dir2 / filename;
         threads.emplace_back(CopyFile, path1, path2);
     }
+    std::cout << "Started copying in " << threads.size() << " threads..." << std::endl;
 
     for (std::thread &t : threads) {
         t.join();
@@ -111,14 +121,20 @@ void CopyAllFilesWithManyThreads(const std::string &dir1, const std::string &dir
 }
 
 int main() {
-    std::string input_dir = "./input";
-    std::string output_dir = "./output";
-    std::cout << "Started copying" << std::endl;
+    const fs::path inputDir = "./input";
+    const fs::path outputDir = "./output";
 
-    fs::remove_all(fs::path(output_dir));
-    fs::create_directory(output_dir);
+    bool directoryExists = fs::exists(inputDir);
+    if (!directoryExists) {
+        std::cerr << "Input folder '" << inputDir << "' does not exist!"
+                  << std::endl;
+        exit(1);
+    }
 
-    CopyAllFilesWithManyThreads(input_dir, output_dir);
+    fs::remove_all(fs::path(outputDir));
+    fs::create_directory(outputDir);
+
+    CopyAllFilesWithManyThreads(inputDir, outputDir);
 
 //	CopyAllFilesInSingleThread(input_dir, output_dir);
 
