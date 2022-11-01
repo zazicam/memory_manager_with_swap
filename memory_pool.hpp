@@ -20,14 +20,16 @@ class MemoryBlock {
 	size_t size_; 
     MemoryPool *pool_;
 
-//    MemoryBlock(const MemoryBlock&) = delete;
-//    MemoryBlock &operator=(const MemoryBlock &) = delete;
+    MemoryBlock(const MemoryBlock&) = delete;
+    MemoryBlock &operator=(const MemoryBlock &) = delete;
 
   public:
     MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size, MemoryPool *pool);
 
+    MemoryBlock(MemoryBlock &&) = default;
+    MemoryBlock &operator=(MemoryBlock &&) = default;
+
     template <typename T = char> T *getPtr() {
-//		std::cout << "getPtr()" << std::endl;
         return static_cast<T *>(ptr_);
     }
 

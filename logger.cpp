@@ -14,14 +14,14 @@ void Logger::Flush() {
 }
 
 void Logger::Lock() {
-//	mutex.lock();	
+	mutex.lock();	
 }
 
 void Logger::Unlock() {
 	output << str();
 	str("");
 	Flush();
-//	mutex.unlock();
+	mutex.unlock();
 }
 
 Logger logger {std::cout};
