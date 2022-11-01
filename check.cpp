@@ -52,29 +52,23 @@ bool compareAllFilesInFolders(const std::string &dir1,
 }
 
 int checkResult() {
+	std::cout << "This is very slow bytewise check" << std::endl;
     std::cout << "Start check" << std::endl;
 
     std::string input_dir = "./input";
     std::string output_dir = "./output";
     bool res = compareAllFilesInFolders(input_dir, output_dir);
-    if (res) {
-        std::cout << "Ok" << std::endl;
-    } else {
-        std::cout << "There are errors!" << std::endl;
-    }
-
-    std::cout << "Finished check" << std::endl;
+    std::cout << "Finished check ... ";
     return res;
 }
 
 int main() {
     bool res = checkResult();
-    std::cout << "Result: " << std::boolalpha << res << std::endl;
 	if(res == false) {
-		std::cerr << "ERROR!" << std::endl;
-		return 1;
+		std::cout << "ERROR!" << std::endl;
+		exit(1);
 	} else {
-		std::cerr << "[OK]" << std::endl;
+		std::cout << "[OK]" << std::endl;
 	}
 	return 0;
 }
