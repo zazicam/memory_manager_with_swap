@@ -123,7 +123,6 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 	blockSize(blockSize),
 	numLevels(2),
 	poolAddress(static_cast<char*>(poolAddress)),
-	swapId(std::vector<SwapIdType>(numBlocks, 2)), // 0 - empty, 1..MAX_SWAP_LEVEL - block ids 
 	swapTable({
 		new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
 		new DiskSwapLevel(1, numBlocks, blockSize)
@@ -214,7 +213,7 @@ void DiskSwap::ReturnLastSwappedBlockIntoRam(size_t blockIndex) {
 	swapTable.at(lastSwapLevel)->at(blockIndex) = 0; // mark freed
 }
 
-size_t DiskSwap::Swap(size_t blockIndex) {
+SwapIdType DiskSwap::Swap(size_t blockIndex) {
 	// just check if pool block is empty (no need to swap in that case)
 	if(swapTable.at(RAM) == 0) {
 		std::cout << "DiskSwap::Swap(" << blockIndex << ")."
@@ -234,11 +233,25 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 	}
 
 	Swap(blockIndex, swapLevel);
+	
+	// we are to return a new id for block in ram (after swap it has new id)
+	// so, let's just find any free id in interval [2 .. MAX_SWAP_LEVEL] 
+	std::vector<char> usedIdTable(MAX_SWAP_LEVEL+1, 0);
+	for(size_t level = 0; level < numLevels; ++level) {
+		SwapIdType id = swapTable.at(level)->at(blockIndex);
+		usedIdTable.at(id) = 1;	
+	}
+	// iterate it reverse order to avoid pitfall with unsigned overflow (infinite loop)
+	SwapIdType newId = 0;
+	for(SwapIdType id = MAX_SWAP_LEVEL; id>=2; --id) {
+		if(usedIdTable.at(id) == 0) {
+			newId = id;
+			break;
+		}
+	}
 
-	assert(swapId.at(blockIndex) < MAX_SWAP_LEVEL);
-	size_t res = swapId.at(blockIndex);	
-	swapId.at(blockIndex)++;
-	return res; 
+	assert(newId >= 2);	 // 0 - empty block, 1 - reserved for allocation in ram (without swap)
+	return newId; 
 }
 
 DiskSwap::~DiskSwap() {
