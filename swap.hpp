@@ -4,8 +4,10 @@
 #include <vector>
 #include <cstddef>
 #include <mutex>
+#include <limits>
 
-using uchar = unsigned char;
+using SwapIdType = unsigned char;
+constexpr SwapIdType MAX_SWAP_LEVEL = std::numeric_limits<SwapIdType>::max();
 
 class SwapLevel {
 protected:
@@ -13,12 +15,12 @@ protected:
 	size_t numBlocks;
 	size_t blockSize;
 	size_t totalSize;
-	std::vector<uchar> blockId;
+	std::vector<SwapIdType> blockId;
 public:
 	SwapLevel(size_t level, size_t numBlocks, size_t blockSize);
 
-	uchar& at(size_t blockIndex); 
-	const uchar& at(size_t blockIndex) const; 
+	SwapIdType& at(size_t blockIndex); 
+	const SwapIdType& at(size_t blockIndex) const; 
 
 	virtual void WriteBlock(void* data, size_t blockIndex) = 0; 
 	virtual void ReadBlock(void* data, size_t blockIndex) = 0; 
@@ -54,9 +56,9 @@ public:
 class DiskSwap {
 	size_t numBlocks;
 	size_t blockSize;
-	uchar numLevels;
+	SwapIdType numLevels;
 	char* poolAddress;
-	std::vector<uchar> swapId;
+	std::vector<SwapIdType> swapId;
 	std::vector<SwapLevel*> swapTable;
 
 	const size_t RAM = 0;
