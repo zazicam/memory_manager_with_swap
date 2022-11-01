@@ -8,9 +8,6 @@
 #include <filesystem>
 #include <functional>
 
-// debug only
-#include <iomanip>
-
 #include "swap.hpp"
 #include "logger.hpp"
 
@@ -24,16 +21,16 @@ SwapLevel::SwapLevel(size_t level, size_t numBlocks, size_t blockSize)
 	numBlocks(numBlocks),
 	blockSize(blockSize),
 	totalSize(numBlocks*blockSize),
-	blockId(std::vector<uchar>(numBlocks, 0)) 
+	blockId(std::vector<SwapIdType>(numBlocks, 0)) 
 {
 }
 
-uchar& SwapLevel::at(size_t blockIndex) {
+SwapIdType& SwapLevel::at(size_t blockIndex) {
 	assert(blockIndex < numBlocks);
 	return blockId.at(blockIndex);
 }
 
-const uchar& SwapLevel::at(size_t blockIndex) const {
+const SwapIdType& SwapLevel::at(size_t blockIndex) const {
 	assert(blockIndex < numBlocks);
 	return blockId.at(blockIndex);
 }
@@ -126,11 +123,14 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 	blockSize(blockSize),
 	numLevels(2),
 	poolAddress(static_cast<char*>(poolAddress)),
-	swapId(std::vector<uchar>(numBlocks, 2)), // 0 - empty, 1..255 - block ids 
+	swapId(std::vector<SwapIdType>(numBlocks, 2)), // 0 - empty, 1..MAX_SWAP_LEVEL - block ids 
 	swapTable({
 		new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
 		new DiskSwapLevel(1, numBlocks, blockSize)
-	}) {}
+	})
+	{
+		std::cout << "MAX_SWAP_LEVEL = " << static_cast<size_t>(MAX_SWAP_LEVEL) << std::endl;
+	}
 
 void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
 	if(id == swapTable.at(RAM)->at(blockIndex)) {
@@ -225,6 +225,9 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 	size_t swapLevel = FindEmptyLevel(blockIndex);
 	if(swapLevel == 0) {
 		// empty level not found, let's create it!
+		// but in this realisation we can have fixed amount of levels
+		assert(numLevels < MAX_SWAP_LEVEL);
+
 		swapTable.push_back( new DiskSwapLevel{numLevels, numBlocks, blockSize} );
 		swapLevel = numLevels;
 		++numLevels;
@@ -232,7 +235,7 @@ size_t DiskSwap::Swap(size_t blockIndex) {
 
 	Swap(blockIndex, swapLevel);
 
-	assert(swapId.at(blockIndex) < 255);
+	assert(swapId.at(blockIndex) < MAX_SWAP_LEVEL);
 	size_t res = swapId.at(blockIndex);	
 	swapId.at(blockIndex)++;
 	return res; 
