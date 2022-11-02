@@ -33,14 +33,14 @@ class MemoryBlock {
         return static_cast<T *>(ptr_);
     }
 
-    size_t size();
-	size_t capacity(); 
+    size_t size() const;
+	size_t capacity() const; 
 
     void lock();
     void unlock();
     void free();
 
-	void debugPrint();
+	void debugPrint() const;
 };
 
 // --------------------------------------------------------

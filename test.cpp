@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 
 // medium files (~100Mb)
 const size_t max_block_size = 1024;
-const size_t num_blocks = 1024;
+const size_t num_blocks = 1024; 
 MemoryPool memoryPool(num_blocks, max_block_size);
 
 // large files (~2Gb)

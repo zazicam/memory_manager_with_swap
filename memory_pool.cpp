@@ -20,11 +20,11 @@ using namespace std::chrono_literals;
 MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size, MemoryPool *pool)
     : ptr_(ptr), id_(id), capacity_(capacity), size_(size), pool_(pool) {}
 
-size_t MemoryBlock::size() {
+size_t MemoryBlock::size() const {
     return size_;
 }
 
-size_t MemoryBlock::capacity() {
+size_t MemoryBlock::capacity() const {
 	return capacity_;
 }
 
@@ -45,7 +45,7 @@ void MemoryBlock::free() {
     pool_->freeBlock(ptr_, id_);
 }
 
-void MemoryBlock::debugPrint() {
+void MemoryBlock::debugPrint() const {
 	LOG_BEGIN
 	logger << "Block Info: " << std::endl;
 	logger << "ptr: " << ptr_ << ", blockIndex: " << pool_->blockIndexByAddress(ptr_) << std::endl;
