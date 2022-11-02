@@ -30,14 +30,11 @@ public:
 	MemoryBlock getBlock(size_t size) {
 		auto it = poolMap.lower_bound(size);
 		if(it == end(poolMap)) {
-			std::cerr << "MemoryManager: getBlock() requested block of " << size << " bytes\n";
-			std::cerr << "And there largest block in pool has size " << blockSizes.back() << " bytes\n";
-			std::cerr << "Can't do that and just exit()" << std::endl;
-			exit(1);
+			std::cerr << "Can't allocate more than " + std::to_string(blockSizes.back()) + 
+				" bytes for one block.";
+			throw std::bad_alloc();
 		}
 		
-		std::cout << "MemoryManager: getBlock() requested block of " << size << " bytes"
-			<< "-> Ok" << std::endl;
 		return it->second->getBlock(size);
 	}
 
@@ -63,8 +60,16 @@ int main(int argc, char** argv) {
 	
 	size_t blockSize = 1;
 	for(int i=0; i<20; i++) {
-		MemoryBlock mb = memory.getBlock(blockSize);
-		std::cout << "need block of " << blockSize << " bytes -> got " << mb.size() << " bytes" << std::endl;
+
+		std::cout << "need block of " << blockSize << " bytes -> ";
+		try {
+			MemoryBlock mb = memory.getBlock(blockSize);
+			std::cout << "got " << mb.size() << " bytes" << std::endl;
+			mb.free();
+		} catch(std::bad_alloc& ex) {
+			std::cout << "exception: " << ex.what() << std::endl;	
+		}
+	
 		blockSize *= 2;
 	}
 	
