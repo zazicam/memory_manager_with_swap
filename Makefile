@@ -3,8 +3,8 @@ FLAGS=-Wall -Werror -Wextra
 
 all: memory_pool_test memory_manager_test check_result
 
-memory_manager_test: memory_manager.o memory_pool.o swap.o logger.o  
-	$(CC) $(FLAGS) memory_manager.o memory_pool.o swap.o logger.o -o memory_manager_test 
+memory_manager_test: memory_manager.o memory_pool.o swap.o logger.o test.o 
+	$(CC) $(FLAGS) memory_manager.o memory_pool.o swap.o test.o logger.o -o memory_manager_test 
 
 memory_pool_test: memory_pool.o swap.o test.o logger.o
 	$(CC) $(FLAGS) memory_pool.o swap.o test.o logger.o -o memory_pool_test 
@@ -12,7 +12,7 @@ memory_pool_test: memory_pool.o swap.o test.o logger.o
 check_result: check.o
 	$(CC) $(FLAGS) check.o -o check_result
 
-memory_manager.o: memory_manager.cpp
+memory_manager.o: memory_manager.hpp memory_manager.cpp
 	$(CC) $(FLAGS) -c memory_manager.cpp
 
 memory_pool.o: memory_pool.hpp memory_pool.cpp
