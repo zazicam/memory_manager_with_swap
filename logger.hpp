@@ -3,24 +3,23 @@
 #include <mutex>
 #include <sstream>
 
-#define LOG_BEGIN logger.Lock();                                        \
-logger << "\n[logger: " << __FILE__ << " line: " << __LINE__ << "]\n";  \
-logger.Flush();
+#define LOG_BEGIN                                                              \
+    logger.Lock();                                                             \
+    logger << "\n[logger: " << __FILE__ << " line: " << __LINE__ << "]\n";     \
+    logger.Flush();
 
-#define LOG_END  \
-logger.Unlock();
+#define LOG_END logger.Unlock();
 
-class Logger: public std::ostringstream
-{
-	std::ostream& output;
-	std::mutex mutex;
-public:
-	explicit Logger(std::ostream& str);
+class Logger : public std::ostringstream {
+    std::ostream &output;
+    std::mutex mutex;
 
-	void Flush();
-	void Lock(); 
-	void Unlock(); 
+  public:
+    explicit Logger(std::ostream &str);
+
+    void Flush();
+    void Lock();
+    void Unlock();
 };
 
 extern Logger logger;
-

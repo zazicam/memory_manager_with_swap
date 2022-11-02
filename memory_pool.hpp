@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cassert>
+#include <condition_variable>
 #include <cstddef>
 #include <mutex>
-#include <condition_variable>
 #include <vector>
 
 #include "swap.hpp"
@@ -14,33 +14,32 @@ class MemoryPool;
 // class MemoryBlock
 // --------------------------------------------------------
 class MemoryBlock {
-    void* ptr_;
+    void *ptr_;
     size_t id_;
     size_t capacity_;
-	size_t size_; 
+    size_t size_;
     MemoryPool *pool_;
 
-    MemoryBlock(const MemoryBlock&) = delete;
+    MemoryBlock(const MemoryBlock &) = delete;
     MemoryBlock &operator=(const MemoryBlock &) = delete;
 
   public:
-    MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size, MemoryPool *pool);
+    MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
+                MemoryPool *pool);
 
     MemoryBlock(MemoryBlock &&) = default;
     MemoryBlock &operator=(MemoryBlock &&) = default;
 
-    template <typename T = char> T *getPtr() {
-        return static_cast<T *>(ptr_);
-    }
+    template <typename T = char> T *getPtr() { return static_cast<T *>(ptr_); }
 
     size_t size() const;
-	size_t capacity() const; 
+    size_t capacity() const;
 
     void lock();
     void unlock();
     void free();
 
-	void debugPrint() const;
+    void debugPrint() const;
 };
 
 // --------------------------------------------------------
@@ -54,20 +53,20 @@ class MemoryPool {
     size_t totalSize;
     char *memoryPtr;
     char *nextBlock;
-	std::mutex poolMutex;
-	std::mutex swapMutex;
+    std::mutex poolMutex;
+    std::mutex swapMutex;
 
-	std::mutex blockMutex;
-	std::condition_variable conditionVariable;
-	std::vector<bool> blockIsLocked;
+    std::mutex blockMutex;
+    std::condition_variable conditionVariable;
+    std::vector<bool> blockIsLocked;
 
     DiskSwap *diskSwap;
 
     void *privateAlloc();
-	void privateFree(void *ptr); 
+    void privateFree(void *ptr);
 
     size_t blockIndexByAddress(void *ptr);
-	char* blockAddressByIndex(size_t index);
+    char *blockAddressByIndex(size_t index);
 
     MemoryPool(const MemoryPool &) = delete;
     MemoryPool &operator=(const MemoryPool &) = delete;
@@ -76,9 +75,9 @@ class MemoryPool {
     MemoryPool(size_t numBlocks, size_t blockSize);
     ~MemoryPool();
 
-	void lockBlock(void *ptr); 
-	void unlockBlock(void *ptr); 
+    void lockBlock(void *ptr);
+    void unlockBlock(void *ptr);
 
     MemoryBlock getBlock(size_t size);
-	void freeBlock(void* ptr, size_t id); 
+    void freeBlock(void *ptr, size_t id);
 };

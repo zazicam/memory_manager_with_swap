@@ -33,8 +33,7 @@ bool compareFiles(const fs::path &path1, const fs::path &path2) {
     return res;
 }
 
-bool compareAllFilesInFolders(const fs::path &dir1,
-                              const fs::path &dir2) {
+bool compareAllFilesInFolders(const fs::path &dir1, const fs::path &dir2) {
     bool result = true;
     for (const auto &entry : fs::directory_iterator(dir1)) {
         const fs::path filepath = entry.path();
@@ -53,7 +52,7 @@ bool compareAllFilesInFolders(const fs::path &dir1,
 }
 
 int checkResult() {
-	std::cout << "This is very slow bytewise check" << std::endl;
+    std::cout << "This is very slow bytewise check" << std::endl;
     std::cout << "Start check" << std::endl;
 
     fs::path input_dir = "./input";
@@ -65,11 +64,11 @@ int checkResult() {
 
 int main() {
     bool res = checkResult();
-	if(res == false) {
-		std::cout << "ERROR!" << std::endl;
-		exit(1);
-	} else {
-		std::cout << "[OK]" << std::endl;
-	}
-	return 0;
+    if (res == false) {
+        std::cout << "ERROR!" << std::endl;
+        exit(1);
+    } else {
+        std::cout << "[OK]" << std::endl;
+    }
+    return 0;
 }
