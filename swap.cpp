@@ -128,7 +128,6 @@ DiskSwap::DiskSwap(void* poolAddress, size_t numBlocks, size_t blockSize)
 		new DiskSwapLevel(1, numBlocks, blockSize)
 	})
 	{
-		std::cout << "MAX_SWAP_LEVEL = " << static_cast<size_t>(MAX_SWAP_LEVEL) << std::endl;
 	}
 
 void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {

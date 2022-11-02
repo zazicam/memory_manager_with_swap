@@ -6,6 +6,7 @@
 #include <numeric>
 
 #include "memory_pool.hpp"
+#include "config.hpp"
 
 class MemoryManager {
 	const std::vector<size_t> blockSizes {16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
@@ -23,6 +24,7 @@ public:
 		for(size_t size : blockSizes) {
 			poolMap[size] = std::make_unique<MemoryPool>(N, size);
 		}
+		std::cout << "MAX_SWAP_LEVEL = " << static_cast<size_t>(MAX_SWAP_LEVEL) << std::endl;
 	}
 
 	MemoryBlock getBlock(size_t size) {
