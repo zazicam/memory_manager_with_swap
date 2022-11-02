@@ -8,32 +8,11 @@
 #include <thread>
 #include <vector>
 
-#include "check.hpp"
-#include "memory_pool.hpp"
-#include "logger.hpp"
+#include "memory_manager.hpp"
+
+MemoryManager* memoryManager = nullptr;
 
 namespace fs = std::filesystem;
-
-// bytewise
-//const size_t max_block_size = 1;
-//const size_t num_blocks = 3;
-//MemoryPool memoryPool(3, 8);
-
-// small 
-//const size_t max_block_size = 16;
-//const size_t num_blocks = 3;
-//MemoryPool memoryPool(num_blocks, max_block_size);
-
-// medium files (~100Mb)
-const size_t max_block_size = 1024;
-const size_t num_blocks = 1024; 
-MemoryPool memoryPool(num_blocks, max_block_size);
-
-// large files (~2Gb)
-//const size_t max_block_size = 1024;
-//const size_t num_blocks = 16 * 1024;
-//MemoryPool memoryPool(1024, max_block_size);
-
 
 void CopyFile(const fs::path &filename1, const fs::path &filename2) {
     std::ifstream fin(filename1, std::ios::binary);
@@ -57,10 +36,10 @@ void CopyFile(const fs::path &filename1, const fs::path &filename2) {
 	// 1. read whole input file in random blocks [1 .. max_block_size] bytes
 	std::vector<MemoryBlock> blocks;
     while (readed < filesize) {
-        size_t size = 1 + rand() % max_block_size;
+        size_t size = 1 + rand() % memoryManager->maxBlockSize(); 
         size = std::min(size, filesize - readed);
 
-        MemoryBlock mb = memoryPool.getBlock(size);
+        MemoryBlock mb = memoryManager->getBlock(size);
 		mb.lock();
 
         char *buf = mb.getPtr<char>();
@@ -124,7 +103,23 @@ void CopyAllFilesWithManyThreads(const fs::path &dir1, const fs::path &dir2) {
     threads.clear();
 }
 
-int main() {
+int main(int argc, char** argv) {
+	if(argc < 2) {
+		std::cout << "This program needs an integer argument." << std::endl;
+		std::cout << "Usage: " << std::endl;
+		std::cout << "\t" << argv[0] << " [size of RAM in Mb]" << std::endl;
+        exit(1);
+	}
+
+	int memorySizeMb = 0;
+	std::istringstream iss(argv[1]);
+	iss >> memorySizeMb;
+	if(iss.fail() || !iss.eof() || memorySizeMb <= 0) {
+		std::cout << "[size of RAM in Mb]: wrong input!" << std::endl;
+        exit(1);
+	}
+
+	memoryManager = new MemoryManager(memorySizeMb * 1024 * 1024);
     const fs::path inputDir = "./input";
     const fs::path outputDir = "./output";
 
@@ -139,9 +134,10 @@ int main() {
     fs::create_directory(outputDir);
 
     CopyAllFilesWithManyThreads(inputDir, outputDir);
-
 //	CopyAllFilesInSingleThread(input_dir, output_dir);
-
+	
+	delete memoryManager;
+	
     std::cout << "Copying completed" << std::endl;
 	std::cout << "-----------------" << std::endl;
 	std::cout << std::endl;

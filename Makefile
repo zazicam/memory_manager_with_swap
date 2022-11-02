@@ -1,13 +1,10 @@
 CC=g++
 FLAGS=-Wall -Werror -Wextra
 
-all: memory_pool_test memory_manager_test check_result
+all: memory_manager_test check_result
 
 memory_manager_test: memory_manager.o memory_pool.o swap.o logger.o test.o 
 	$(CC) $(FLAGS) memory_manager.o memory_pool.o swap.o test.o logger.o -o memory_manager_test 
-
-memory_pool_test: memory_pool.o swap.o test.o logger.o
-	$(CC) $(FLAGS) memory_pool.o swap.o test.o logger.o -o memory_pool_test 
 
 check_result: check.o
 	$(CC) $(FLAGS) check.o -o check_result
@@ -36,5 +33,4 @@ clean:
 	rm -rf *.o *.bin
 
 run:
-	./memory_pool_test
-	./check_result
+	if ./memory_manager_test 10; then ./check_result; fi

@@ -30,3 +30,6 @@ MemoryBlock MemoryManager::getBlock(size_t size) {
 	return it->second->getBlock(size);
 }
 
+size_t MemoryManager::maxBlockSize() const {
+	return blockSizes.back();
+}
