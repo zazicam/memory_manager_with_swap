@@ -32,7 +32,7 @@ public:
 		if(it == end(poolMap)) {
 			std::cerr << "MemoryManager: getBlock() requested block of " << size << " bytes\n";
 			std::cerr << "And there largest block in pool has size " << blockSizes.back() << " bytes\n";
-			std::cerr << "Can't do that!" << std::endl;
+			std::cerr << "Can't do that and just exit()" << std::endl;
 			exit(1);
 		}
 		
@@ -60,7 +60,13 @@ int main(int argc, char** argv) {
 	}
 
 	MemoryManager memory(memorySizeMb * 1024 * 1024);
-
+	
+	size_t blockSize = 1;
+	for(int i=0; i<20; i++) {
+		MemoryBlock mb = memory.getBlock(blockSize);
+		std::cout << "need block of " << blockSize << " bytes -> got " << mb.size() << " bytes" << std::endl;
+		blockSize *= 2;
+	}
 	
 
 	return 0;
