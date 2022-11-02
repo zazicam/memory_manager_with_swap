@@ -79,8 +79,8 @@ DiskSwapLevel::DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize)
 	try {
 		std::filesystem::resize_file(filepath, totalSize);
 	} catch (const fs::filesystem_error &) {
-		std::cerr << "Error: Swap() can't resize file to " << totalSize
-			<< " bytes" << std::endl;
+		std::cerr << "Error: Swap() can't resize file to " << totalSize << " bytes!\n"  
+		   << "Wrong rights or limit for amount of file descriptors" << std::endl;
 	}
 
 	file = std::move(
@@ -88,8 +88,8 @@ DiskSwapLevel::DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize)
 	);
 
 	if (!file) {
-		std::cerr << "Error: Swap() can't create file " << filepath
-			<< " for writing" << std::endl;
+		std::cerr << "Error: Swap() can't create file " << filepath << " for writing!\n" 
+		   << "Wrong rights or limit for amount of file descriptors" << std::endl;
 		exit(1);
 	}
 }

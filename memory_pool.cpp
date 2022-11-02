@@ -85,6 +85,8 @@ MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize)
 
     // create disk swap
     diskSwap = new DiskSwap(memoryPtr, numBlocks, blockSize);
+	
+	std::cout << "Created memory pool " << numBlocks << " blocks x " << blockSize << " bytes" << std::endl;
 }
 
 MemoryPool::~MemoryPool() {
@@ -161,8 +163,10 @@ void MemoryPool::lockBlock(void *ptr) {
 
 void MemoryPool::unlockBlock(void *ptr) {
 	std::unique_lock<std::mutex> ul(blockMutex);
-	blockIsLocked.at(blockIndexByAddress(ptr)) = false;
-	conditionVariable.notify_one();
+	if(blockIsLocked.at(blockIndexByAddress(ptr)) == true) {
+		blockIsLocked.at(blockIndexByAddress(ptr)) = false;
+		conditionVariable.notify_one();
+	}
 	ul.unlock();
 }
 

@@ -16,19 +16,23 @@ namespace fs = std::filesystem;
 
 // bytewise
 //const size_t max_block_size = 1;
+//const size_t num_blocks = 3;
 //MemoryPool memoryPool(3, 8);
 
 // small 
 //const size_t max_block_size = 16;
-//MemoryPool memoryPool(3, max_block_size);
+//const size_t num_blocks = 3;
+//MemoryPool memoryPool(num_blocks, max_block_size);
 
 // medium files (~100Mb)
 const size_t max_block_size = 1024;
-MemoryPool memoryPool(1024, max_block_size);
+const size_t num_blocks = 1024;
+MemoryPool memoryPool(num_blocks, max_block_size);
 
 // large files (~2Gb)
 //const size_t max_block_size = 1024;
-//MemoryPool memoryPool(16 * 1024, max_block_size);
+//const size_t num_blocks = 16 * 1024;
+//MemoryPool memoryPool(1024, max_block_size);
 
 
 void CopyFile(const fs::path &filename1, const fs::path &filename2) {
