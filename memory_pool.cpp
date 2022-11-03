@@ -18,26 +18,95 @@ using namespace std::chrono_literals;
 // class MemoryBlock
 // --------------------------------------------------------
 MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
-                         MemoryPool *pool)
-    : ptr_(ptr), id_(id), capacity_(capacity), size_(size), pool_(pool) {}
+                         bool locked, MemoryPool *pool)
+    : ptr_(ptr), id_(id), capacity_(capacity), size_(size)
+	, locked_(locked), pool_(pool), moved_(false) {}
+
+MemoryBlock::MemoryBlock(MemoryBlock&& other) 
+    : ptr_(other.ptr_), id_(other.id_), capacity_(other.capacity_), size_(other.size_)
+	, locked_(other.locked_), pool_(other.pool_), moved_(false) 
+	{
+		other.ptr_ = nullptr;
+		other.moved_ = true;
+	}
+
+MemoryBlock& MemoryBlock::operator=(MemoryBlock&& other) {
+	if(this == &other)
+		return *this;
+
+	other.ptr_ = nullptr;
+	other.moved_ = true;
+	return *this;
+}
 
 size_t MemoryBlock::size() const { return size_; }
 
 size_t MemoryBlock::capacity() const { return capacity_; }
 
-void MemoryBlock::lock() {
-    size_t blockIndex = pool_->blockIndexByAddress(ptr_);
-    pool_->lockBlock(ptr_);
-    pool_->swapMutex.lock();
-    pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
-    pool_->swapMutex.unlock();
+void MemoryBlock::checkScopeError() const {
+	if(moved_) {
+		LOG_BEGIN
+		logger << "ERROR: you can't use MemoryBlock in old scope after it was moved to a new scope!" << std::endl;
+		LOG_END
+		exit(1);
+	}
 }
 
-void MemoryBlock::unlock() { pool_->unlockBlock(ptr_); }
+void MemoryBlock::lock() {
+	checkScopeError();	
+	LOG_BEGIN
+	logger << "lock() called " << std::this_thread::get_id() << std::endl; 
+	logger << "before locked_ = " << locked_ << std::endl;
+	LOG_END
+	if(locked_ == false) {
+		size_t blockIndex = pool_->blockIndexByAddress(ptr_);
+		pool_->lockBlock(ptr_);
+		pool_->swapMutex.lock();
+		pool_->diskSwap->LoadBlockIntoRam(blockIndex, id_);
+		pool_->swapMutex.unlock();
+		locked_ = true;
+	} else {
+		LOG_BEGIN
+		logger << "Skip lock! " << std::this_thread::get_id() << std::endl; std::cout.flush();
+		LOG_END
+	}
 
-void MemoryBlock::free() { pool_->freeBlock(ptr_, id_); }
+	LOG_BEGIN
+	logger << "after locked_ = " << locked_ << " ( " << std::this_thread::get_id()<<" )" << std::endl;
+	LOG_END
+}
+
+void MemoryBlock::unlock() { 
+	checkScopeError();	
+	LOG_BEGIN
+	logger << "unlock() called " << std::this_thread::get_id() << std::endl; std::cout.flush();
+	logger << "before locked_ = " << locked_ << std::endl;
+	LOG_END
+	if(locked_ == true) {
+		pool_->unlockBlock(ptr_); 
+		locked_ = false;
+	} else {
+		LOG_BEGIN
+		logger << "Skip unlock! " << std::this_thread::get_id() << std::endl; std::cout.flush();
+		LOG_END
+	}
+	LOG_BEGIN
+	logger << "after locked_ = " << locked_ << " ( " << std::this_thread::get_id()<<" )" << std::endl;
+	LOG_END
+}
+
+bool MemoryBlock::isLocked() const { 
+	checkScopeError();	
+	return locked_; 
+}
+
+void MemoryBlock::free() { 
+	checkScopeError();	
+	pool_->freeBlock(ptr_, id_); 
+}
 
 void MemoryBlock::debugPrint() const {
+	checkScopeError();	
     LOG_BEGIN
     logger << "Block Info: " << std::endl;
     logger << "ptr: " << ptr_
@@ -76,7 +145,7 @@ MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize)
     nextBlock = memoryPtr;
 
     // locker for each block
-    blockIsLocked.resize(numBlocks);
+    blockIsLocked.resize(numBlocks, 0);
 
     // create disk swap
     diskSwap = new DiskSwap(memoryPtr, numBlocks, blockSize);
@@ -112,14 +181,16 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
 
         lockBlock(ptr);
         swapMutex.lock();
-        blockId =
-            diskSwap->Swap(blockIndex); // returns unique id for each new block
+
+	 	// returns unique id for each new block
+        blockId = diskSwap->Swap(blockIndex);
+
         diskSwap->MarkBlockAllocated(blockIndex, blockId);
         swapMutex.unlock();
         unlockBlock(ptr);
     }
 
-    return MemoryBlock{ptr, blockId, blockSize, size, this};
+    return {ptr, blockId, blockSize, size, false, this};
 }
 
 void *MemoryPool::privateAlloc() {
@@ -152,17 +223,15 @@ void MemoryPool::lockBlock(void *ptr) {
     size_t blockIndex = blockIndexByAddress(ptr);
     std::unique_lock<std::mutex> ul(blockMutex);
     conditionVariable.wait(
-        ul, [=]() { return blockIsLocked.at(blockIndex) == false; });
-    blockIsLocked.at(blockIndexByAddress(ptr)) = true;
+        ul, [=]() { return blockIsLocked.at(blockIndex) == 0; });
+    blockIsLocked.at(blockIndexByAddress(ptr)) = 1;
     ul.unlock();
 }
 
 void MemoryPool::unlockBlock(void *ptr) {
     std::unique_lock<std::mutex> ul(blockMutex);
-    if (blockIsLocked.at(blockIndexByAddress(ptr)) == true) {
-        blockIsLocked.at(blockIndexByAddress(ptr)) = false;
-        conditionVariable.notify_one();
-    }
+	blockIsLocked.at(blockIndexByAddress(ptr)) = 0;
+	conditionVariable.notify_one();
     ul.unlock();
 }
 

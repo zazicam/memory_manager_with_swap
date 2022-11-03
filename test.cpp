@@ -33,9 +33,8 @@ std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
 
         fin.read(buf, size);
         readed += size;
-        blocks.push_back(std::move(mb));
-
         mb.unlock();
+        blocks.push_back(std::move(mb));
     }
     fin.close();
 	return blocks;
@@ -61,7 +60,7 @@ void Free(std::vector<MemoryBlock>& blocks) {
     }
 }
 
-void CopyFile(const fs::path &filename1, const fs::path &filename2) {
+void CopyFile(const fs::path filename1, const fs::path filename2) {
     std::ifstream fin(filename1, std::ios::binary);
     std::ofstream fout(filename2, std::ios::binary);
 

@@ -1,5 +1,5 @@
 CC=g++
-FLAGS=-Wall -Werror -Wextra
+FLAGS=-Wall -Werror -Wextra -Waddress -Warray-bounds=1 -Wbool-compare -Wbool-operation 
 
 all: memory_manager_test check_result
 

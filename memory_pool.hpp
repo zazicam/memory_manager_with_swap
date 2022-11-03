@@ -8,6 +8,9 @@
 
 #include "swap.hpp"
 
+#include <thread>
+#include "logger.hpp"
+
 class MemoryPool;
 
 // --------------------------------------------------------
@@ -18,17 +21,19 @@ class MemoryBlock {
     size_t id_;
     size_t capacity_;
     size_t size_;
+	bool locked_;
     MemoryPool *pool_;
+	bool moved_;
 
     MemoryBlock(const MemoryBlock &) = delete;
     MemoryBlock &operator=(const MemoryBlock &) = delete;
 
   public:
     MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
-                MemoryPool *pool);
+                bool locked_, MemoryPool *pool);
 
-    MemoryBlock(MemoryBlock &&) = default;
-    MemoryBlock &operator=(MemoryBlock &&) = default;
+    MemoryBlock(MemoryBlock &&);
+    MemoryBlock &operator=(MemoryBlock &&);
 
     template <typename T = char> T *getPtr() { return static_cast<T *>(ptr_); }
 
@@ -38,7 +43,9 @@ class MemoryBlock {
     void lock();
     void unlock();
     void free();
+	bool isLocked() const;
 
+	void checkScopeError() const; // can exit(1)
     void debugPrint() const;
 };
 
