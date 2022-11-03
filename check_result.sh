@@ -4,17 +4,19 @@ outputDir="./output"
 error=false
 for file in $(ls $inputDir); do
 	filename=$(basename $file)
+	inputFile="$inputDir/$filename"
+	outputFile="$outputDir/$filename"
 	echo -n "$filename ... " 
-	if [ -f "$ouputDir/$filename" ]; then
-		DIFF=$(diff "$inputDir/$filename" "$outputDir/$filename")
+	if [ -f $outputFile ]; then
+		DIFF=$(diff $inputFile $outputFile)
 		if [ "$DIFF" == "" ]; then
-			echo "[OK]" 
+			echo "[+]" 
 		else
-			echo "[ERROR]"
+			echo "[ERROR: wrong file]"
 			error=true	
 		fi	
 	else
-		echo "[NO SUCH FILE]"
+		echo "[ERROR: no such file]"
 		error=true	
 	fi
 done
@@ -22,6 +24,8 @@ done
 echo      "---------------"
 if [ "$error" = true ]; then
 	echo "The are errors!"
+	exit 1
 else
 	echo "All right!"
+	exit 0
 fi

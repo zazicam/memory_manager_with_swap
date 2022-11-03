@@ -1,7 +1,7 @@
 CC=g++
 FLAGS=-Wall -Werror -Wextra -Waddress -Warray-bounds=1 -Wbool-compare -Wbool-operation 
 
-all: memory_manager_test check_result
+all: memory_manager_test #check_result
 
 memory_manager_test: memory_manager.o memory_pool.o swap.o logger.o test.o 
 	$(CC) $(FLAGS) memory_manager.o memory_pool.o swap.o test.o logger.o -o memory_manager_test 
@@ -33,4 +33,5 @@ clean:
 	rm -rf *.o *.bin
 
 run:
-	if ./memory_manager_test 10; then ./check_result; fi
+	./memory_manager_test 10
+	bash ./check_result.sh

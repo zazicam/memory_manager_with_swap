@@ -54,10 +54,6 @@ void MemoryBlock::checkScopeError() const {
 
 void MemoryBlock::lock() {
 	checkScopeError();	
-	LOG_BEGIN
-	logger << "lock() called " << std::this_thread::get_id() << std::endl; 
-	logger << "before locked_ = " << locked_ << std::endl;
-	LOG_END
 	if(locked_ == false) {
 		size_t blockIndex = pool_->blockIndexByAddress(ptr_);
 		pool_->lockBlock(ptr_);
@@ -67,32 +63,21 @@ void MemoryBlock::lock() {
 		locked_ = true;
 	} else {
 		LOG_BEGIN
-		logger << "Skip lock! " << std::this_thread::get_id() << std::endl; std::cout.flush();
+		logger << "Info: lock() called for a locked block" << std::endl; 
 		LOG_END
 	}
-
-	LOG_BEGIN
-	logger << "after locked_ = " << locked_ << " ( " << std::this_thread::get_id()<<" )" << std::endl;
-	LOG_END
 }
 
 void MemoryBlock::unlock() { 
 	checkScopeError();	
-	LOG_BEGIN
-	logger << "unlock() called " << std::this_thread::get_id() << std::endl; std::cout.flush();
-	logger << "before locked_ = " << locked_ << std::endl;
-	LOG_END
 	if(locked_ == true) {
 		pool_->unlockBlock(ptr_); 
 		locked_ = false;
 	} else {
 		LOG_BEGIN
-		logger << "Skip unlock! " << std::this_thread::get_id() << std::endl; std::cout.flush();
+		logger << "Info: unlock() called for an unlocked block" << std::endl; 
 		LOG_END
 	}
-	LOG_BEGIN
-	logger << "after locked_ = " << locked_ << " ( " << std::this_thread::get_id()<<" )" << std::endl;
-	LOG_END
 }
 
 bool MemoryBlock::isLocked() const { 
