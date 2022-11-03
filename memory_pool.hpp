@@ -32,10 +32,18 @@ class MemoryBlock {
 	class AutoLocker {
 		T* ptr;
 		MemoryBlock* block;
+		bool wasLocked;
 	public:
 		AutoLocker(T* ptr, MemoryBlock* block) 
-			: ptr(ptr), block(block) { block->lock(); }
-		~AutoLocker() { block->unlock(); }
+			: ptr(ptr), block(block), wasLocked(block->isLocked())
+		{
+			if(!wasLocked) 
+				block->lock(); 
+		}
+		~AutoLocker() { 
+			if(!wasLocked)
+				block->unlock(); 
+		}
 		operator T*() { return ptr; }
 	};
 
