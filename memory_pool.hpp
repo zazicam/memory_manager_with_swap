@@ -17,7 +17,7 @@ class MemoryPool;
 // class MemoryBlock
 // --------------------------------------------------------
 class MemoryBlock {
-    void *ptr_;
+    void* ptr_;
     size_t id_;
     size_t capacity_;
     size_t size_;
@@ -27,6 +27,17 @@ class MemoryBlock {
 
     MemoryBlock(const MemoryBlock &) = delete;
     MemoryBlock &operator=(const MemoryBlock &) = delete;
+	
+	template<typename T> 
+	class AutoLocker {
+		T* ptr;
+		MemoryBlock* block;
+	public:
+		AutoLocker(T* ptr, MemoryBlock* block) 
+			: ptr(ptr), block(block) { block->lock(); }
+		~AutoLocker() { block->unlock(); }
+		operator T*() { return ptr; }
+	};
 
   public:
     MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
@@ -34,8 +45,11 @@ class MemoryBlock {
 
     MemoryBlock(MemoryBlock &&);
     MemoryBlock &operator=(MemoryBlock &&);
-
-    template <typename T = char> T *getPtr() { return static_cast<T *>(ptr_); }
+	
+	template<typename T=char>
+	AutoLocker<T> data() {
+		return AutoLocker{static_cast<T*>(ptr_), this};
+	}
 
     size_t size() const;
     size_t capacity() const;

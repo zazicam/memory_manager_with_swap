@@ -26,15 +26,12 @@ std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
         size_t size = 1 + rand() % memoryManager->maxBlockSize();
         size = std::min(size, filesize - readed);
 
-        MemoryBlock mb = memoryManager->getBlock(size);
-        mb.lock();
+        MemoryBlock block = memoryManager->getBlock(size);
 
-        char *buf = mb.getPtr<char>();
-
-        fin.read(buf, size);
+        fin.read(block.data(), size);
         readed += size;
-        mb.unlock();
-        blocks.push_back(std::move(mb));
+
+        blocks.push_back(std::move(block));
     }
     fin.close();
 	return blocks;
@@ -42,14 +39,8 @@ std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
 
 void WriteBlocksIntoFile(std::vector<MemoryBlock>& blocks, std::ofstream& fout) {
     for (size_t i = 0; i < blocks.size(); ++i) {
-        MemoryBlock &mb = blocks.at(i);
-        mb.lock();
-
-        char *buf = mb.getPtr<char>();
-        size_t size = mb.size();
-        fout.write(buf, size);
-
-        mb.unlock();
+        MemoryBlock& block = blocks.at(i);
+        fout.write(block.data(), block.size());
     }
     fout.close();
 }
