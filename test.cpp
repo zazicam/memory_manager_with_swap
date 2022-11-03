@@ -76,17 +76,17 @@ void CopyFile(const fs::path &filename1, const fs::path &filename2) {
         exit(1);
     }
 
-    // 1. read whole input file in random blocks of [1 .. maxBlockSize] bytes
+    // 1. read whole input file by random blocks of [1 .. maxBlockSize] bytes
 	std::vector<MemoryBlock> blocks = ReadFileByBlocks(fin);
 
-    // 2. write all blocks to the output file
+    // 2. write all blocks to the output file 
 	WriteBlocksIntoFile(blocks, fout);
 
     // 3. free blocks
 	Free(blocks);
 }
 
-void CopyAllFilesInSingleThread(const fs::path &dir1, const fs::path &dir2) {
+void CopyFilesInSingleThread(const fs::path &dir1, const fs::path &dir2) {
     for (const auto &entry : fs::directory_iterator(dir1)) {
         const fs::path filename = entry.path().filename();
         const fs::path path1 = dir1 / filename;
@@ -95,7 +95,7 @@ void CopyAllFilesInSingleThread(const fs::path &dir1, const fs::path &dir2) {
     }
 }
 
-void CopyAllFilesWithManyThreads(const fs::path &dir1, const fs::path &dir2) {
+void CopyFilesInMultipleThreads(const fs::path &dir1, const fs::path &dir2) {
     std::cout << "List of files in input folder '" << dir1 << "':" << std::endl;
     std::vector<std::thread> threads;
     for (const auto &entry : fs::directory_iterator(dir1)) {
@@ -144,8 +144,8 @@ int main(int argc, char **argv) {
     fs::remove_all(fs::path(outputDir));
     fs::create_directory(outputDir);
 
-    CopyAllFilesWithManyThreads(inputDir, outputDir);
-    //	CopyAllFilesInSingleThread(input_dir, output_dir);
+//    CopyFilesInSingleThread(inputDir, outputDir);
+    CopyFilesInMultipleThreads(inputDir, outputDir);
 
     delete memoryManager;
 
