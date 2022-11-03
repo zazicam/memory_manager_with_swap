@@ -14,28 +14,13 @@ MemoryManager *memoryManager = nullptr;
 
 namespace fs = std::filesystem;
 
-void CopyFile(const fs::path &filename1, const fs::path &filename2) {
-    std::ifstream fin(filename1, std::ios::binary);
-    std::ofstream fout(filename2, std::ios::binary);
-
-    if (!fin) {
-        std::cerr << "Can't open file " << filename1 << " for reading"
-                  << std::endl;
-        exit(1);
-    }
-    if (!fout) {
-        std::cerr << "Can't open file " << filename2 << " for writing"
-                  << std::endl;
-        exit(1);
-    }
-
+std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
     fin.seekg(0, std::ios::end);
     size_t filesize = fin.tellg();
     fin.seekg(0, std::ios::beg);
-
+	
     size_t readed = 0;
 
-    // 1. read whole input file in random blocks [1 .. max_block_size] bytes
     std::vector<MemoryBlock> blocks;
     while (readed < filesize) {
         size_t size = 1 + rand() % memoryManager->maxBlockSize();
@@ -53,14 +38,10 @@ void CopyFile(const fs::path &filename1, const fs::path &filename2) {
         mb.unlock();
     }
     fin.close();
+	return blocks;
+}
 
-    // 2. write all blocks to the output file
-    if (!fout) {
-        std::cerr << "Can't open file " << filename2 << " for writing"
-                  << std::endl;
-        exit(1);
-    }
-
+void WriteBlocksIntoFile(std::vector<MemoryBlock>& blocks, std::ofstream& fout) {
     for (size_t i = 0; i < blocks.size(); ++i) {
         MemoryBlock &mb = blocks.at(i);
         mb.lock();
@@ -72,11 +53,37 @@ void CopyFile(const fs::path &filename1, const fs::path &filename2) {
         mb.unlock();
     }
     fout.close();
+}
 
-    // 3. free blocks
+void Free(std::vector<MemoryBlock>& blocks) {
     for (auto &mb : blocks) {
         mb.free();
     }
+}
+
+void CopyFile(const fs::path &filename1, const fs::path &filename2) {
+    std::ifstream fin(filename1, std::ios::binary);
+    std::ofstream fout(filename2, std::ios::binary);
+
+    if (!fin) {
+        std::cerr << "Can't open file " << filename1 << " for reading"
+                  << std::endl;
+        exit(1);
+    }
+    if (!fout) {
+        std::cerr << "Can't open file " << filename2 << " for writing"
+                  << std::endl;
+        exit(1);
+    }
+
+    // 1. read whole input file in random blocks of [1 .. maxBlockSize] bytes
+	std::vector<MemoryBlock> blocks = ReadFileByBlocks(fin);
+
+    // 2. write all blocks to the output file
+	WriteBlocksIntoFile(blocks, fout);
+
+    // 3. free blocks
+	Free(blocks);
 }
 
 void CopyAllFilesInSingleThread(const fs::path &dir1, const fs::path &dir2) {
@@ -129,7 +136,7 @@ int main(int argc, char **argv) {
 
     bool directoryExists = fs::exists(inputDir);
     if (!directoryExists) {
-        std::cerr << "Input folder '" << inputDir << "' does not exist!"
+        std::cerr << "Input folder " << inputDir << " does not exist!"
                   << std::endl;
         exit(1);
     }
