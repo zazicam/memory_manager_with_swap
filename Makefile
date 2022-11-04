@@ -3,11 +3,8 @@ FLAGS=-Wall -Werror -Wextra -Waddress -Warray-bounds=1 -Wbool-compare -Wbool-ope
 
 all: memory_manager_test #check_result
 
-memory_manager_test: memory_manager.o memory_pool.o swap.o logger.o test.o 
-	$(CC) $(FLAGS) memory_manager.o memory_pool.o swap.o test.o logger.o -o memory_manager_test 
-
-check_result: check.o
-	$(CC) $(FLAGS) check.o -o check_result
+memory_manager_test: memory_manager.o memory_pool.o memory_block.o swap.o logger.o test.o 
+	$(CC) $(FLAGS) memory_manager.o memory_pool.o memory_block.o swap.o test.o logger.o -o memory_manager_test 
 
 memory_manager.o: memory_manager.hpp memory_manager.cpp
 	$(CC) $(FLAGS) -c memory_manager.cpp
@@ -15,17 +12,19 @@ memory_manager.o: memory_manager.hpp memory_manager.cpp
 memory_pool.o: memory_pool.hpp memory_pool.cpp
 	$(CC) $(FLAGS) -c memory_pool.cpp
 
+memory_block.o: memory_block.hpp memory_block.cpp
+	$(CC) $(FLAGS) -c memory_block.cpp
+
 swap.o: swap.hpp swap.cpp
 	$(CC) $(FLAGS) -c swap.cpp
 
 test.o: test.cpp
 	$(CC) $(FLAGS) -c test.cpp
 
-check.o: check.cpp check.hpp
-	$(CC) $(FLAGS) -c check.cpp
-
 logger.o: logger.cpp logger.hpp
 	$(CC) $(FLAGS) -c logger.cpp
+
+build: all
 
 rebuild: clean all
 
@@ -33,5 +32,5 @@ clean:
 	rm -rf *.o *.bin
 
 run:
-	./memory_manager_test 10
+	./memory_manager_test 1
 	bash ./check_result.sh
