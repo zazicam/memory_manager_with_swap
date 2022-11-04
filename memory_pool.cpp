@@ -62,7 +62,7 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
     size_t blockId = 1;
     void *ptr = privateAlloc();
 
-    size_t blockIndex;
+    size_t blockIndex = 0;
     if (ptr) {
         blockIndex = blockIndexByAddress(ptr);
         swapMutex.lock();
@@ -72,8 +72,15 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
     } else {
         // No free blocks in pool, try to use swap
 
-        // Random block for tests!!!
-        blockIndex = rand() % numBlocks;
+        // Random block for test :)
+        // blockIndex = rand() % numBlocks;
+
+		// The oldest allocated block for task
+		if(!swapQueue.empty()) {
+			blockIndex = swapQueue.front();
+			swapQueue.pop();
+		}
+
         ptr = blockAddressByIndex(blockIndex);
 
         lockBlock(ptr);
@@ -87,6 +94,7 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
         unlockBlock(ptr);
 		stat.swappedCounter++;
     }
+	swapQueue.push(blockIndex);
     return MemoryBlock{ptr, blockId, blockSize, size, false, this};
 }
 

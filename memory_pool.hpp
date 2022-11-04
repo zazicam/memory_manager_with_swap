@@ -5,6 +5,7 @@
 #include <mutex>
 #include <vector>
 #include <atomic>
+#include <queue>
 
 #include "swap.hpp"
 #include "logger.hpp"
@@ -32,6 +33,8 @@ class MemoryPool {
     std::mutex blockMutex;
     std::condition_variable conditionVariable;
     std::vector<bool> blockIsLocked;
+
+	std::queue<size_t> swapQueue;
 
     DiskSwap *diskSwap;
 	PoolStat stat;
