@@ -76,6 +76,7 @@ DiskSwapLevel::DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize)
                   << " bytes!\n"
                   << "Wrong rights or limit for amount of file descriptors"
                   << std::endl;
+        exit(1);
     }
 
     file = std::move(std::fstream(filepath, std::ios::binary | std::ios::in |
