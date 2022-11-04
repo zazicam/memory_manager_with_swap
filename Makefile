@@ -37,5 +37,5 @@ clean:
 	rm -rf $(BUILD_DIR)/*.bin 
 
 run:
-	./$(BUILD_DIR)/memory_manager_test 1; 
+	./$(BUILD_DIR)/memory_manager_test 100;  # Permission to allocate 100 Mb RAM
 	bash ./check_result.sh
