@@ -138,6 +138,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+	auto startTime = std::chrono::steady_clock::now();
+	
     memoryManager = new MemoryManager(memorySizeMb * 1024 * 1024);
     const fs::path inputDir = "./input";
     const fs::path outputDir = "./output";
@@ -157,8 +159,13 @@ int main(int argc, char **argv) {
 
     delete memoryManager;
 
+	auto endTime = std::chrono::steady_clock::now();
+	auto elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+	size_t sec = elapsedTimeMs.count() / 1000;
+	size_t ms = elapsedTimeMs.count() % 1000;
+
     std::cout << std::endl;
-    std::cout << "Copying completed" << std::endl;
+    std::cout << "Copying completed in " << sec << " sec " << ms << " ms" << std::endl;
     std::cout << std::endl;
 
     return 0;

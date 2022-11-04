@@ -18,9 +18,6 @@ class MemoryBlock {
     MemoryPool *pool_;
 	bool moved_;
 
-    MemoryBlock(const MemoryBlock &) = delete;
-    MemoryBlock &operator=(const MemoryBlock &) = delete;
-	
 	template<typename T> 
 	class AutoLocker {
 		T* ptr;
@@ -43,6 +40,9 @@ class MemoryBlock {
   public:
     MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
                 bool locked_, MemoryPool *pool);
+
+    MemoryBlock(const MemoryBlock &) = delete;
+    MemoryBlock &operator=(const MemoryBlock &) = delete;
 
     MemoryBlock(MemoryBlock &&);
     MemoryBlock &operator=(MemoryBlock &&);

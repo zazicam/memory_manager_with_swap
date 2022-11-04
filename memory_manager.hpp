@@ -12,11 +12,11 @@ class MemoryManager {
                                          512, 1024, 2048, 4096};
     std::map<size_t, std::unique_ptr<MemoryPool>> poolMap;
 
+  public:
+    MemoryManager(size_t memorySize);
     MemoryManager(const MemoryManager &) = delete;
     MemoryManager &operator=(const MemoryManager &) = delete;
 
-  public:
-    MemoryManager(size_t memorySize);
     MemoryBlock getBlock(size_t size);
     size_t maxBlockSize() const;
 	void printStatistics() const;

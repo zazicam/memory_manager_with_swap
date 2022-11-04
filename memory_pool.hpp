@@ -45,11 +45,10 @@ class MemoryPool {
     size_t blockIndexByAddress(void *ptr);
     char *blockAddressByIndex(size_t index);
 
-    MemoryPool(const MemoryPool &) = delete;
-    MemoryPool &operator=(const MemoryPool &) = delete;
-
   public:
     MemoryPool(size_t numBlocks, size_t blockSize);
+    MemoryPool(const MemoryPool &) = delete;
+    MemoryPool &operator=(const MemoryPool &) = delete;
     ~MemoryPool();
 
     void lockBlock(void *ptr);
