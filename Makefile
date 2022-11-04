@@ -1,10 +1,14 @@
 CC=g++
 FLAGS=-Wall -Werror -Wextra -Waddress -Warray-bounds=1 -Wbool-compare -Wbool-operation 
+BUILD_DIR=./build
 
-all: memory_manager_test #check_result
+all: memory_manager_test 
 
 memory_manager_test: memory_manager.o memory_pool.o memory_block.o swap.o logger.o test.o 
-	$(CC) $(FLAGS) memory_manager.o memory_pool.o memory_block.o swap.o test.o logger.o -o memory_manager_test 
+	mv *.o $(BUILD_DIR) 
+	cd $(BUILD_DIR);    \
+	$(CC) $(FLAGS) memory_manager.o memory_pool.o memory_block.o swap.o test.o logger.o \
+	-o memory_manager_test 
 
 memory_manager.o: memory_manager.hpp memory_manager.cpp
 	$(CC) $(FLAGS) -c memory_manager.cpp
@@ -29,8 +33,9 @@ build: all
 rebuild: clean all
 
 clean:
-	rm -rf *.o *.bin
+	rm -rf $(BUILD_DIR)/*.o 
+	rm -rf $(BUILD_DIR)/*.bin 
 
 run:
-	./memory_manager_test 1
+	./$(BUILD_DIR)/memory_manager_test 1; 
 	bash ./check_result.sh

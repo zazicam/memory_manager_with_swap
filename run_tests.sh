@@ -8,7 +8,7 @@ echo "Run $numTests tests in a row."
 rm ./logs/*
 for i in $(seq 1 $numTests); do 
 	echo -n "# $i ... "; 
-	./memory_manager_test 1 > ./logs/log$i.txt && ./check_result.sh >> ./logs/log$i.txt
+	./build/memory_manager_test 1 > ./logs/log$i.txt && ./check_result.sh >> ./logs/log$i.txt
 	if [ $? -eq 0 ]; then
 		echo "[+]"
 	else 
