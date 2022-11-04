@@ -157,3 +157,11 @@ void MemoryPool::freeBlock(void *ptr, size_t id) {
     swapMutex.unlock();
     unlockBlock(ptr);
 }
+
+const PoolStat& MemoryPool::getStatistics() const {
+	return stat;
+}
+
+size_t MemoryPool::getNumBlocks() const {
+	return numBlocks;
+}

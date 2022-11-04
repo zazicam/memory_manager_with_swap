@@ -19,4 +19,5 @@ class MemoryManager {
     MemoryManager(size_t memorySize);
     MemoryBlock getBlock(size_t size);
     size_t maxBlockSize() const;
+	void printStatistics() const;
 };

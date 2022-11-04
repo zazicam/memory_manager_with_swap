@@ -4,15 +4,16 @@
 #include <cstddef>
 #include <mutex>
 #include <vector>
+#include <atomic>
 
 #include "swap.hpp"
 #include "logger.hpp"
 #include "memory_block.hpp"
 
 struct PoolStat {
-	size_t usedCounter = 0;
-	size_t lockedCounter = 0;
-	size_t swappedCounter = 0;
+	std::atomic<size_t> usedCounter = 0;
+	std::atomic<size_t> lockedCounter = 0;
+	std::atomic<size_t> swappedCounter = 0;
 };
 
 // --------------------------------------------------------
@@ -53,4 +54,7 @@ class MemoryPool {
 
     MemoryBlock getBlock(size_t size);
     void freeBlock(void *ptr, size_t id);
+	
+	size_t getNumBlocks() const;
+	const PoolStat& getStatistics() const;
 };

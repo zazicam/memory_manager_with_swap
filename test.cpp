@@ -1,18 +1,32 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
+#include <chrono>
 
 #include "memory_manager.hpp"
 
 MemoryManager *memoryManager = nullptr;
 
 namespace fs = std::filesystem;
+
+static std::atomic<bool> finished = false;
+
+void ShowStatistics() {
+	while(!finished) {
+		memoryManager->printStatistics();
+		std::cout << std::endl;
+		std::chrono::milliseconds timespan(1000);
+		std::this_thread::sleep_for(timespan);
+	}
+	memoryManager->printStatistics();
+}
 
 std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
     fin.seekg(0, std::ios::end);
@@ -97,10 +111,15 @@ void CopyFilesInMultipleThreads(const fs::path &dir1, const fs::path &dir2) {
     std::cout << "Started copying in " << threads.size() << " threads..."
               << std::endl;
 
+	std::thread statThread(ShowStatistics);
+
     for (std::thread &t : threads) {
         t.join();
     }
     threads.clear();
+
+	finished = true;
+	statThread.join();
 }
 
 int main(int argc, char **argv) {
@@ -138,8 +157,8 @@ int main(int argc, char **argv) {
 
     delete memoryManager;
 
+    std::cout << std::endl;
     std::cout << "Copying completed" << std::endl;
-    std::cout << "-----------------" << std::endl;
     std::cout << std::endl;
 
     return 0;

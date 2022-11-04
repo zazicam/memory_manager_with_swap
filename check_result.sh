@@ -21,11 +21,11 @@ for file in $(ls $inputDir); do
 	fi
 done
 
-echo      "---------------"
+echo
 if [ "$error" = true ]; then
 	echo "The are errors!"
 	exit 1
 else
-	echo "All right!"
+	echo "[Ok]"
 	exit 0
 fi

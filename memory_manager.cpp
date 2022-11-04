@@ -4,6 +4,7 @@
 #include <numeric>
 #include <sstream>
 #include <vector>
+#include <iomanip>
 
 #include "memory_manager.hpp"
 
@@ -34,3 +35,44 @@ MemoryBlock MemoryManager::getBlock(size_t size) {
 }
 
 size_t MemoryManager::maxBlockSize() const { return blockSizes.back(); }
+
+//-----------------
+// Show statistics 
+//-----------------
+using std::setw;
+using std::endl;
+
+void HorizontalSplit(int w) {
+	std::cout << std::setfill('-');
+	std::cout << std::left << "+"
+		<< setw(w+1) << "-" << "+"
+		<< setw(w+1) << "-" << "+" 
+		<< setw(w+1) << "-" << "+" 
+		<< setw(w+1) << "-" << "+" 
+		<< setw(w+1) << "-" << "+" 
+		<< endl << std::setfill(' ');
+}
+
+void MemoryManager::printStatistics() const {
+	const int w = 12;
+	HorizontalSplit(w);
+	std::cout << std::left << "|"
+		<< " " << setw(w) << "Size (byte)" << "|"
+		<< " " << setw(w) << "Number (ram)" << "|"
+		<< " " << setw(w) << "Used" << "|" 
+		<< " " << setw(w) << "Locked" << "|" 
+		<< " " << setw(w) << "Swapped" << "|" 
+		<< endl;
+	HorizontalSplit(w);
+	for(const auto& [size, pool] : poolMap) {
+		const PoolStat& stat = pool->getStatistics();
+		std::cout << std::left << "|"
+		    << " " << setw(w) << size << "|"
+			<< " " << setw(w) << pool->getNumBlocks() << "|"
+			<< " " << setw(w) << stat.usedCounter << "|"
+			<< " " << setw(w) << stat.lockedCounter << "|" 
+			<< " " << setw(w) << stat.swappedCounter << "|"
+			<< endl;
+	}
+	HorizontalSplit(w);
+}
