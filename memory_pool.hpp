@@ -31,18 +31,18 @@ class MemoryBlock {
 	template<typename T> 
 	class AutoLocker {
 		T* ptr;
-		MemoryBlock* block;
+		mutable const MemoryBlock* block;
 		bool wasLocked;
 	public:
-		AutoLocker(T* ptr, MemoryBlock* block) 
+		AutoLocker(T* ptr, const MemoryBlock* block) 
 			: ptr(ptr), block(block), wasLocked(block->isLocked())
 		{
 			if(!wasLocked) 
-				block->lock(); 
+				const_cast<MemoryBlock*>(block)->lock(); 
 		}
 		~AutoLocker() { 
 			if(!wasLocked)
-				block->unlock(); 
+				const_cast<MemoryBlock*>(block)->unlock(); 
 		}
 		operator T*() { return ptr; }
 	};
@@ -56,6 +56,11 @@ class MemoryBlock {
 	
 	template<typename T=char>
 	AutoLocker<T> data() {
+		return AutoLocker{static_cast<T*>(ptr_), this};
+	}
+
+	template<typename T=const char>
+	AutoLocker<T> data() const {
 		return AutoLocker{static_cast<T*>(ptr_), this};
 	}
 

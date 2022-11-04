@@ -37,9 +37,8 @@ std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
 	return blocks;
 }
 
-void WriteBlocksIntoFile(std::vector<MemoryBlock>& blocks, std::ofstream& fout) {
-    for (size_t i = 0; i < blocks.size(); ++i) {
-        MemoryBlock& block = blocks.at(i);
+void WriteBlocksIntoFile(const std::vector<MemoryBlock>& blocks, std::ofstream& fout) {
+    for (const auto& block : blocks) {
         fout.write(block.data(), block.size());
     }
     fout.close();
