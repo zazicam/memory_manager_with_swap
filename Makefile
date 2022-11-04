@@ -1,14 +1,15 @@
 CC=g++
 FLAGS=-Wall -Werror -Wextra -Waddress -Warray-bounds=1 -Wbool-compare -Wbool-operation 
 BUILD_DIR=./build
+EXECUTABLE=memory_manager_test
 
-all: memory_manager_test 
+all: $(EXECUTABLE) 
 
 memory_manager_test: memory_manager.o memory_pool.o memory_block.o swap.o logger.o test.o 
 	mv *.o $(BUILD_DIR) 
 	cd $(BUILD_DIR);    \
 	$(CC) $(FLAGS) memory_manager.o memory_pool.o memory_block.o swap.o test.o logger.o \
-	-o memory_manager_test 
+	-o $(EXECUTABLE)  
 
 memory_manager.o: memory_manager.hpp memory_manager.cpp
 	$(CC) $(FLAGS) -c memory_manager.cpp
@@ -35,7 +36,8 @@ rebuild: clean all
 clean:
 	rm -rf $(BUILD_DIR)/*.o 
 	rm -rf $(BUILD_DIR)/*.bin 
+	rm $(BUILD_DIR)/$(EXECUTABLE) 
 
 run:
-	./$(BUILD_DIR)/memory_manager_test 100;  # Permission to allocate 100 Mb RAM
+	./$(BUILD_DIR)/$(EXECUTABLE) 100;  # Permission to allocate 100 Mb RAM
 	bash ./check_result.sh
