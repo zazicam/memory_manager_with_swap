@@ -9,12 +9,17 @@
 #include "logger.hpp"
 #include "memory_block.hpp"
 
+struct PoolStat {
+	size_t usedCounter = 0;
+	size_t lockedCounter = 0;
+	size_t swappedCounter = 0;
+};
+
 // --------------------------------------------------------
 // class MemoryPool
 // --------------------------------------------------------
 class MemoryPool {
     friend class MemoryBlock;
-
     size_t numBlocks;
     size_t blockSize;
     size_t totalSize;
@@ -28,6 +33,7 @@ class MemoryPool {
     std::vector<bool> blockIsLocked;
 
     DiskSwap *diskSwap;
+	PoolStat stat;
 
     void *privateAlloc();
     void privateFree(void *ptr);

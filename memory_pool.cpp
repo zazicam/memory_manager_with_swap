@@ -68,7 +68,7 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
         swapMutex.lock();
         diskSwap->MarkBlockAllocated(blockIndex, blockId);
         swapMutex.unlock();
-
+		stat.usedCounter++;
     } else {
         // No free blocks in pool, try to use swap
 
@@ -85,9 +85,9 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
         diskSwap->MarkBlockAllocated(blockIndex, blockId);
         swapMutex.unlock();
         unlockBlock(ptr);
+		stat.swappedCounter++;
     }
-
-    return {ptr, blockId, blockSize, size, false, this};
+    return MemoryBlock{ptr, blockId, blockSize, size, false, this};
 }
 
 void *MemoryPool::privateAlloc() {
@@ -123,6 +123,7 @@ void MemoryPool::lockBlock(void *ptr) {
         ul, [=]() { return blockIsLocked.at(blockIndex) == 0; });
     blockIsLocked.at(blockIndexByAddress(ptr)) = 1;
     ul.unlock();
+	stat.lockedCounter++;
 }
 
 void MemoryPool::unlockBlock(void *ptr) {
@@ -130,27 +131,29 @@ void MemoryPool::unlockBlock(void *ptr) {
 	blockIsLocked.at(blockIndexByAddress(ptr)) = 0;
 	conditionVariable.notify_one();
     ul.unlock();
+	stat.lockedCounter--;
 }
 
 void MemoryPool::freeBlock(void *ptr, size_t id) {
     std::lock_guard<std::mutex> poolGuard(poolMutex);
     lockBlock(ptr);
     swapMutex.lock();
-
     size_t blockIndex = blockIndexByAddress(ptr);
-
     if (diskSwap->isBlockInSwap(blockIndex, id)) {
         // it's in swap, let's just mark it freed (in swapTable)
         diskSwap->MarkBlockFreed(blockIndex, id);
+		stat.swappedCounter--;
     } else {
+		// it's it ram
         if (diskSwap->HasSwappedBlocks(blockIndex)) {
             diskSwap->ReturnLastSwappedBlockIntoRam(blockIndex);
+			stat.swappedCounter--;
         } else {
             privateFree(ptr);
             diskSwap->MarkBlockFreed(blockIndex, id);
+			stat.usedCounter--;
         }
     }
-
     swapMutex.unlock();
     unlockBlock(ptr);
 }
