@@ -126,7 +126,7 @@ void CopyFilesInMultipleThreads(const fs::path &dir1, const fs::path &dir2) {
 	statThread.join();
 }
 
-int main(int argc, char **argv) {
+size_t CheckArgsAndGetMemorySize(int argc, char** argv) {
     if (argc < 2) {
         std::cout << "This program needs an integer argument." << std::endl;
         std::cout << "Usage: " << std::endl;
@@ -141,19 +141,25 @@ int main(int argc, char **argv) {
         std::cout << "[size of RAM in Mb]: wrong input!" << std::endl;
         exit(1);
     }
+	return memorySizeMb;
+}
 
-	auto startTime = std::chrono::steady_clock::now();
-	
-    memoryManager = new MemoryManager(memorySizeMb * 1024 * 1024);
-    const fs::path inputDir = "./input";
-    const fs::path outputDir = "./output";
-
-    bool directoryExists = fs::exists(inputDir);
-    if (!directoryExists) {
-        std::cerr << "Input folder " << inputDir << " does not exist!"
+void CheckIfDirectoryExists(const fs::path dir) {
+    if (!fs::exists(dir)) {
+        std::cerr << "Input folder " << dir << " does not exist!"
                   << std::endl;
         exit(1);
     }
+}
+
+int main(int argc, char** argv) {
+	size_t memorySizeMb = CheckArgsAndGetMemorySize(argc, argv);
+    const fs::path inputDir = "./input";
+    const fs::path outputDir = "./output";
+	CheckIfDirectoryExists(inputDir);
+	
+	auto startTime = std::chrono::steady_clock::now();
+    memoryManager = new MemoryManager(memorySizeMb * 1024 * 1024);
 
     fs::remove_all(fs::path(outputDir));
     fs::create_directory(outputDir);
@@ -162,14 +168,11 @@ int main(int argc, char **argv) {
     CopyFilesInMultipleThreads(inputDir, outputDir);
 
     delete memoryManager;
-
 	auto endTime = std::chrono::steady_clock::now();
-	std::chrono::milliseconds executeTime(
-		std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime));
 
-    std::cout << std::endl;
-    std::cout << "Copying completed in " << hh_mm_ss{executeTime}  
-		<< std::endl << std::endl;
+    std::cout << "\nCopying completed in " 
+		<< hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) }
+		<< "\n" << std::endl;
 
     return 0;
 }
