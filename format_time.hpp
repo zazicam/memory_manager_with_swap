@@ -9,7 +9,6 @@ class hh_mm_ss {
 	std::chrono::milliseconds milliseconds;
 public:
 	hh_mm_ss(std::chrono::milliseconds msec) {
-		std::cout << msec.count() << std::endl;
 		hours = std::chrono::duration_cast<std::chrono::hours>(msec);
 		msec -= hours;
 		minutes = std::chrono::duration_cast<std::chrono::minutes>(msec);

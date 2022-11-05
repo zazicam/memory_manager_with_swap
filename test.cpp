@@ -13,19 +13,17 @@
 #include "memory_manager.hpp"
 #include "format_time.hpp"
 
-MemoryManager *memoryManager = nullptr;
-
 namespace fs = std::filesystem;
 
 static std::atomic<bool> finished = false;
 
 void ShowStatistics() {
 	while(!finished) {
-		memoryManager->printStatistics();
+		memory.printStatistics();
 		std::cout << std::endl;
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
-	memoryManager->printStatistics();
+	memory.printStatistics();
 }
 
 size_t FileSize(std::ifstream& fin) {
@@ -41,10 +39,10 @@ std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
 
     std::vector<MemoryBlock> blocks;
     while (readed < filesize) {
-        size_t size = 1 + rand() % memoryManager->maxBlockSize();
+        size_t size = 1 + rand() % memory.maxBlockSize();
         size = std::min(size, filesize - readed);
 
-        MemoryBlock block = memoryManager->getBlock(size);
+        MemoryBlock block = memory.getBlock(size);
 
         fin.read(block.data(), size);
         readed += size;
@@ -161,19 +159,19 @@ void CreateDirectoryIfNotExists(const fs::path dir) {
 }
 
 int main(int argc, char** argv) {
-	size_t memorySizeMb = CheckArgsAndGetMemorySize(argc, argv);
     const fs::path inputDir = "./input";
     const fs::path outputDir = "./output";
 	CheckIfDirectoryExists(inputDir);
 	CreateDirectoryIfNotExists(outputDir);
 	
+	size_t memorySizeMb = CheckArgsAndGetMemorySize(argc, argv);
+    memory.init(memorySizeMb * 1024 * 1024);
+
 	auto startTime = std::chrono::steady_clock::now();
-    memoryManager = new MemoryManager(memorySizeMb * 1024 * 1024);
 
 //    CopyFilesInSingleThread(inputDir, outputDir);
     CopyFilesInMultipleThreads(inputDir, outputDir);
 
-    delete memoryManager;
 	auto endTime = std::chrono::steady_clock::now();
 
     std::cout << "\nCopying completed in " 

@@ -9,13 +9,18 @@
 
 #include "memory_manager.hpp"
 
-MemoryManager::MemoryManager(size_t memorySize) {
+MemoryManager& memory = MemoryManager::instance();
+
+MemoryManager::MemoryManager() {}
+
+void MemoryManager::init(size_t memorySize) {
     const size_t packOfBlocksSize =
         std::reduce(begin(blockSizes), end(blockSizes));
     const size_t N = memorySize / packOfBlocksSize;
     std::cout << "Memory size = " << memorySize << " bytes" << std::endl;
     std::cout << "N = " << N << std::endl;
 
+	poolMap.clear();
     for (size_t size : blockSizes) {
         poolMap[size] = std::make_unique<MemoryPool>(N, size);
     }

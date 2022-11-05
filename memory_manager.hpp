@@ -13,12 +13,22 @@ class MemoryManager {
     std::map<size_t, std::unique_ptr<MemoryPool>> poolMap;
 	mutable std::mutex mutex;
 
+  	MemoryManager();
   public:
-    MemoryManager(size_t memorySize);
+	void init(size_t memorySize);
+	static MemoryManager& instance() {
+		static MemoryManager memory;
+		return memory;
+	}
+
     MemoryManager(const MemoryManager &) = delete;
     MemoryManager &operator=(const MemoryManager &) = delete;
+    MemoryManager(MemoryManager &&) = delete;
+    MemoryManager &operator=(MemoryManager &&) = delete;
 
     MemoryBlock getBlock(size_t size);
     size_t maxBlockSize() const;
 	void printStatistics() const;
 };
+
+extern MemoryManager& memory;
