@@ -19,11 +19,11 @@ static std::atomic<bool> finished = false;
 
 void ShowStatistics() {
 	while(!finished) {
-		memory.printStatistics();
+		memoryManager.printStatistics();
 		std::cout << std::endl;
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
-	memory.printStatistics();
+	memoryManager.printStatistics();
 }
 
 size_t FileSize(std::ifstream& fin) {
@@ -39,10 +39,10 @@ std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
 
     std::vector<MemoryBlock> blocks;
     while (readed < filesize) {
-        size_t size = 1 + rand() % memory.maxBlockSize();
+        size_t size = 1 + rand() % memoryManager.maxBlockSize();
         size = std::min(size, filesize - readed);
 
-        MemoryBlock block = memory.getBlock(size);
+        MemoryBlock block = memoryManager.getBlock(size);
 
         fin.read(block.data(), size);
         readed += size;
@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
 	CreateDirectoryIfNotExists(outputDir);
 	
 	size_t memorySizeMb = CheckArgsAndGetMemorySize(argc, argv);
-    memory.init(memorySizeMb * 1024 * 1024);
+    memoryManager.init(memorySizeMb * 1024 * 1024);
 
 	auto startTime = std::chrono::steady_clock::now();
 

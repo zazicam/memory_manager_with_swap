@@ -9,7 +9,7 @@
 
 #include "memory_manager.hpp"
 
-MemoryManager& memory = MemoryManager::instance();
+MemoryManager& memoryManager = MemoryManager::instance();
 
 MemoryManager::MemoryManager() {}
 

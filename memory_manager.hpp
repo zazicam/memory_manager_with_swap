@@ -31,4 +31,4 @@ class MemoryManager {
 	void printStatistics() const;
 };
 
-extern MemoryManager& memory;
+extern MemoryManager& memoryManager;
