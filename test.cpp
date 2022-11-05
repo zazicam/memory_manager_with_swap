@@ -91,26 +91,22 @@ void CopyFile(const fs::path filename1, const fs::path filename2) {
 	Free(blocks);
 }
 
-void CopyFilesInSingleThread(const fs::path &dir1, const fs::path &dir2) {
-    for (const auto &entry : fs::directory_iterator(dir1)) {
+void CopyFilesInSingleThread(const fs::path &inputDir, const fs::path &outputDir) {
+    for (const auto &entry : fs::directory_iterator(inputDir)) {
         const fs::path filename = entry.path().filename();
-        const fs::path path1 = dir1 / filename;
-        const fs::path path2 = dir2 / filename;
-        CopyFile(path1, path2);
+        CopyFile(inputDir/filename, outputDir/filename);
     }
 }
 
-void CopyFilesInMultipleThreads(const fs::path &dir1, const fs::path &dir2) {
-    std::cout << "List of files in input folder '" << dir1 << "':" << std::endl;
+void CopyFilesInMultipleThreads(const fs::path &inputDir, const fs::path &outputDir) {
+    std::cout << "List of files in input folder '" << inputDir << "':" << std::endl;
     std::vector<std::thread> threads;
-    for (const auto &entry : fs::directory_iterator(dir1)) {
+    for (const auto &entry : fs::directory_iterator(inputDir)) {
         const fs::path filename = entry.path().filename();
         std::cout << filename << std::endl;
-        const fs::path path1 = dir1 / filename;
-        const fs::path path2 = dir2 / filename;
-        threads.emplace_back(CopyFile, path1, path2);
+        threads.emplace_back(CopyFile, inputDir/filename, outputDir/filename);
     }
-    std::cout << "Started copying in " << threads.size() << " threads..."
+    std::cout << "\nStarted copying in " << threads.size() << " threads..."
               << std::endl;
 
 	std::thread statThread(ShowStatistics);
