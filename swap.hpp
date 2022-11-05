@@ -7,7 +7,14 @@
 #include <mutex>
 #include <vector>
 
-#include "config.hpp"
+//-------------------------------------------
+// swap config
+//-------------------------------------------
+static std::string SWAP_DIR_PATH = "swap";
+
+using SwapIdType = uint8_t;
+constexpr SwapIdType MAX_SWAP_LEVEL = std::numeric_limits<SwapIdType>::max();
+//-------------------------------------------
 
 class SwapLevel {
   protected:

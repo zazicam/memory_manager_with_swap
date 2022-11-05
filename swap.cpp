@@ -59,11 +59,20 @@ RamSwapLevel::~RamSwapLevel() {}
 // class DiskLevel
 //-------------------------------------------------------------------
 DiskSwapLevel::DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize)
-    : SwapLevel(level, numBlocks, blockSize) {
-    std::string filename = "swap";
-    filepath = "./" + filename + "_" + std::to_string(numBlocks) + "x" +
+    : SwapLevel(level, numBlocks, blockSize) 
+{
+	fs::path swapDir = SWAP_DIR_PATH;
+	if(!fs::exists(swapDir) && !fs::create_directory(swapDir)) {
+		std::cerr << "Swap folder " << swapDir << " does not exists"
+			" and can't create it!" << std::endl;
+		exit(1);
+	}
+
+    std::string filename = std::string("swap") + "_" + std::to_string(numBlocks) + "x" +
                std::to_string(blockSize) + "_" + "L" + std::to_string(level) +
                ".bin";
+
+	filepath = swapDir / filename;
 
     // just to create a new file
     std::ofstream tmp(filepath, std::ios::binary);
@@ -119,7 +128,9 @@ DiskSwap::DiskSwap(void *poolAddress, size_t numBlocks, size_t blockSize)
     : numBlocks(numBlocks), blockSize(blockSize), numLevels(2),
       poolAddress(static_cast<char *>(poolAddress)),
       swapTable({new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
-                 new DiskSwapLevel(1, numBlocks, blockSize)}) {}
+                 new DiskSwapLevel(1, numBlocks, blockSize)}) 
+{
+}
 
 void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
     if (id == swapTable.at(RAM)->at(blockIndex)) {

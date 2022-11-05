@@ -11,7 +11,7 @@
 #include <chrono>
 
 #include "memory_manager.hpp"
-#include "chrono_utils.hpp"
+#include "format_time.hpp"
 
 MemoryManager *memoryManager = nullptr;
 
@@ -152,17 +152,23 @@ void CheckIfDirectoryExists(const fs::path dir) {
     }
 }
 
+void CreateDirectoryIfNotExists(const fs::path dir) {
+	if(!fs::exists(dir) && !fs::create_directory(dir)) {
+		std::cerr << "Output folder " << dir << " does not exists"
+			" and can't create it!" << std::endl;
+		exit(1);
+	}
+}
+
 int main(int argc, char** argv) {
 	size_t memorySizeMb = CheckArgsAndGetMemorySize(argc, argv);
     const fs::path inputDir = "./input";
     const fs::path outputDir = "./output";
 	CheckIfDirectoryExists(inputDir);
+	CreateDirectoryIfNotExists(outputDir);
 	
 	auto startTime = std::chrono::steady_clock::now();
     memoryManager = new MemoryManager(memorySizeMb * 1024 * 1024);
-
-    fs::remove_all(fs::path(outputDir));
-    fs::create_directory(outputDir);
 
 //    CopyFilesInSingleThread(inputDir, outputDir);
     CopyFilesInMultipleThreads(inputDir, outputDir);

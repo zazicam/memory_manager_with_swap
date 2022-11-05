@@ -5,7 +5,6 @@
 #include <mutex>
 #include <vector>
 
-#include "config.hpp"
 #include "memory_pool.hpp"
 
 class MemoryManager {
