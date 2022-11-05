@@ -50,9 +50,9 @@ size_t MemoryManager::maxBlockSize() const {
 	return blockSizes.back(); 
 }
 
-//-----------------
-// Show statistics 
-//-----------------
+//------------------------------
+// Show statistics like a table 
+//------------------------------
 using std::setw;
 using std::endl;
 
@@ -66,11 +66,7 @@ void HorizontalSplit(std::ostringstream& oss, int w) {
 		<< endl << std::setfill(' ');
 }
 
-void MemoryManager::printStatistics() const {
-	assert(initialized == true && "MemoryManager must be initialized before usage");
-	std::ostringstream oss;
-	const int w = 12;
-	HorizontalSplit(oss, w);
+void Header(std::ostringstream& oss, int w) {
 	oss << std::left << "|"
 		<< " " << setw(w) << "Size (byte)" << "|"
 		<< " " << setw(w) << "Number (ram)" << "|"
@@ -78,6 +74,14 @@ void MemoryManager::printStatistics() const {
 		<< " " << setw(w) << "Locked" << "|" 
 		<< " " << setw(w) << "Swapped" << "|" 
 		<< endl;
+}
+
+void MemoryManager::printStatistics() const {
+	assert(initialized == true && "MemoryManager must be initialized before usage");
+	const int w = 12;
+	std::ostringstream oss;
+	HorizontalSplit(oss, w);
+	Header(oss, w);
 	HorizontalSplit(oss, w);
 
 	mutex.lock();
