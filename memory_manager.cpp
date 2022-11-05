@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -23,6 +24,7 @@ MemoryManager::MemoryManager(size_t memorySize) {
 }
 
 MemoryBlock MemoryManager::getBlock(size_t size) {
+	std::lock_guard<std::mutex> guard(mutex);
     auto it = poolMap.lower_bound(size);
     if (it == end(poolMap)) {
         std::cerr << "Can't allocate more than " +
@@ -42,10 +44,9 @@ size_t MemoryManager::maxBlockSize() const { return blockSizes.back(); }
 using std::setw;
 using std::endl;
 
-void HorizontalSplit(int w) {
-	std::cout << std::setfill('-');
-	std::cout << std::left << "+"
-		<< setw(w+1) << "-" << "+"
+void HorizontalSplit(std::ostringstream& oss, int w) {
+	oss << std::setfill('-') << std::left << "+";
+	oss	<< setw(w+1) << "-" << "+"
 		<< setw(w+1) << "-" << "+" 
 		<< setw(w+1) << "-" << "+" 
 		<< setw(w+1) << "-" << "+" 
@@ -54,19 +55,22 @@ void HorizontalSplit(int w) {
 }
 
 void MemoryManager::printStatistics() const {
+	std::ostringstream oss;
 	const int w = 12;
-	HorizontalSplit(w);
-	std::cout << std::left << "|"
+	HorizontalSplit(oss, w);
+	oss << std::left << "|"
 		<< " " << setw(w) << "Size (byte)" << "|"
 		<< " " << setw(w) << "Number (ram)" << "|"
 		<< " " << setw(w) << "Used" << "|" 
 		<< " " << setw(w) << "Locked" << "|" 
 		<< " " << setw(w) << "Swapped" << "|" 
 		<< endl;
-	HorizontalSplit(w);
+	HorizontalSplit(oss, w);
+
+	mutex.lock();
 	for(const auto& [size, pool] : poolMap) {
 		const PoolStat& stat = pool->getStatistics();
-		std::cout << std::left << "|"
+		oss << std::left << "|"
 		    << " " << setw(w) << size << "|"
 			<< " " << setw(w) << pool->getNumBlocks() << "|"
 			<< " " << setw(w) << stat.usedCounter << "|"
@@ -74,5 +78,8 @@ void MemoryManager::printStatistics() const {
 			<< " " << setw(w) << stat.swappedCounter << "|"
 			<< endl;
 	}
-	HorizontalSplit(w);
+	mutex.unlock();
+
+	HorizontalSplit(oss, w);
+	std::cout << oss.str().c_str();
 }

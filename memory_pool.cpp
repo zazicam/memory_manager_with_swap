@@ -171,5 +171,6 @@ const PoolStat& MemoryPool::getStatistics() const {
 }
 
 size_t MemoryPool::getNumBlocks() const {
+    std::lock_guard<std::mutex> poolGuard(poolMutex);
 	return numBlocks;
 }

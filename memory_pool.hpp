@@ -27,7 +27,7 @@ class MemoryPool {
     size_t totalSize;
     char *memoryPtr;
     char *nextBlock;
-    std::mutex poolMutex;
+    mutable std::mutex poolMutex;
     std::mutex swapMutex;
 
     std::mutex blockMutex;

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "config.hpp"
@@ -11,6 +12,7 @@ class MemoryManager {
     const std::vector<size_t> blockSizes{16,  32,   64,   128, 256,
                                          512, 1024, 2048, 4096};
     std::map<size_t, std::unique_ptr<MemoryPool>> poolMap;
+	mutable std::mutex mutex;
 
   public:
     MemoryManager(size_t memorySize);

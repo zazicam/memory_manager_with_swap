@@ -36,7 +36,7 @@ rebuild: clean all
 clean:
 	rm -rf $(BUILD_DIR)/*.o 
 	rm -rf $(BUILD_DIR)/*.bin 
-	rm $(BUILD_DIR)/$(EXECUTABLE) 
+	rm -f $(BUILD_DIR)/$(EXECUTABLE) 
 
 run:
 	./$(BUILD_DIR)/$(EXECUTABLE) 100;  # Permission to allocate 100 Mb RAM

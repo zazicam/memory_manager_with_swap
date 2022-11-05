@@ -4,6 +4,8 @@ else
 	numTests=$1
 fi
 
+mkdir -p logs
+
 echo "Run $numTests tests in a row."
 rm ./logs/*
 for i in $(seq 1 $numTests); do 

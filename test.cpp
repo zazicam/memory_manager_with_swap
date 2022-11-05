@@ -11,6 +11,7 @@
 #include <chrono>
 
 #include "memory_manager.hpp"
+#include "chrono_utils.hpp"
 
 MemoryManager *memoryManager = nullptr;
 
@@ -22,17 +23,20 @@ void ShowStatistics() {
 	while(!finished) {
 		memoryManager->printStatistics();
 		std::cout << std::endl;
-		std::chrono::milliseconds timespan(1000);
-		std::this_thread::sleep_for(timespan);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 	memoryManager->printStatistics();
 }
 
-std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
+size_t FileSize(std::ifstream& fin) {
     fin.seekg(0, std::ios::end);
     size_t filesize = fin.tellg();
     fin.seekg(0, std::ios::beg);
-	
+	return filesize;
+}
+
+std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
+	size_t filesize = FileSize(fin);	
     size_t readed = 0;
 
     std::vector<MemoryBlock> blocks;
@@ -160,13 +164,12 @@ int main(int argc, char **argv) {
     delete memoryManager;
 
 	auto endTime = std::chrono::steady_clock::now();
-	auto elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-	size_t sec = elapsedTimeMs.count() / 1000;
-	size_t ms = elapsedTimeMs.count() % 1000;
+	std::chrono::milliseconds executeTime(
+		std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime));
 
     std::cout << std::endl;
-    std::cout << "Copying completed in " << sec << " sec " << ms << " ms" << std::endl;
-    std::cout << std::endl;
+    std::cout << "Copying completed in " << hh_mm_ss{executeTime}  
+		<< std::endl << std::endl;
 
     return 0;
 }
