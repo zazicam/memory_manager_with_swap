@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <cassert>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -14,13 +15,15 @@ MemoryManager& memoryManager = MemoryManager::instance();
 MemoryManager::MemoryManager() {}
 
 void MemoryManager::init(size_t memorySize) {
+	assert(initialized == false && "MemoryManager can be initialized only once");
+	initialized = true;
+
     const size_t packOfBlocksSize =
         std::reduce(begin(blockSizes), end(blockSizes));
     const size_t N = memorySize / packOfBlocksSize;
     std::cout << "Memory size = " << memorySize << " bytes" << std::endl;
     std::cout << "N = " << N << std::endl;
 
-	poolMap.clear();
     for (size_t size : blockSizes) {
         poolMap[size] = std::make_unique<MemoryPool>(N, size);
     }
@@ -29,6 +32,7 @@ void MemoryManager::init(size_t memorySize) {
 }
 
 MemoryBlock MemoryManager::getBlock(size_t size) {
+	assert(initialized == true && "MemoryManager must be initialized before usage");
 	std::lock_guard<std::mutex> guard(mutex);
     auto it = poolMap.lower_bound(size);
     if (it == end(poolMap)) {
@@ -41,7 +45,10 @@ MemoryBlock MemoryManager::getBlock(size_t size) {
     return it->second->getBlock(size);
 }
 
-size_t MemoryManager::maxBlockSize() const { return blockSizes.back(); }
+size_t MemoryManager::maxBlockSize() const { 
+	assert(initialized == true && "MemoryManager must be initialized before usage");
+	return blockSizes.back(); 
+}
 
 //-----------------
 // Show statistics 
@@ -60,6 +67,7 @@ void HorizontalSplit(std::ostringstream& oss, int w) {
 }
 
 void MemoryManager::printStatistics() const {
+	assert(initialized == true && "MemoryManager must be initialized before usage");
 	std::ostringstream oss;
 	const int w = 12;
 	HorizontalSplit(oss, w);
