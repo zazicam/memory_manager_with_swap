@@ -49,7 +49,6 @@ std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
 
         blocks.push_back(std::move(block));
     }
-    fin.close();
 	return blocks;
 }
 
@@ -57,7 +56,6 @@ void WriteBlocksIntoFile(const std::vector<MemoryBlock>& blocks, std::ofstream& 
     for (const auto& block : blocks) {
         fout.write(block.data(), block.size());
     }
-    fout.close();
 }
 
 void Free(std::vector<MemoryBlock>& blocks) {
@@ -83,9 +81,11 @@ void CopyFile(const fs::path filename1, const fs::path filename2) {
 
     // 1. read whole input file by random blocks of [1 .. maxBlockSize] bytes
 	std::vector<MemoryBlock> blocks = ReadFileByBlocks(fin);
+    fin.close();
 
     // 2. write all blocks to the output file 
 	WriteBlocksIntoFile(blocks, fout);
+    fout.close();
 
     // 3. free blocks
 	Free(blocks);
