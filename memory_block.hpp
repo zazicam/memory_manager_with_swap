@@ -52,11 +52,13 @@ class MemoryBlock {
 	
 	template<typename T=char>
 	AutoLocker<T> data() {
+		assert(ptr_!=nullptr);
 		return AutoLocker{static_cast<T*>(ptr_), this};
 	}
 
 	template<typename T=const char>
 	AutoLocker<T> data() const {
+		assert(ptr_!=nullptr);
 		return AutoLocker{static_cast<T*>(ptr_), this};
 	}
 
