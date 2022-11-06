@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
@@ -9,13 +8,22 @@
 #include <thread>
 #include <vector>
 #include <chrono>
+#include <memory>
+#include <map>
 
 #include "memory_manager.hpp"
 #include "format_time.hpp"
 
 namespace fs = std::filesystem;
 
+struct Progress {
+	std::atomic<size_t> size = 0;
+	std::atomic<size_t> read = 0;
+	std::atomic<size_t> write = 0;
+};
+
 static std::atomic<bool> finished = false;
+static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
 
 void ShowStatistics() {
 	while(!finished) {
@@ -33,29 +41,48 @@ size_t FileSize(std::ifstream& fin) {
 	return filesize;
 }
 
-std::vector<MemoryBlock> ReadFileByBlocks(std::ifstream& fin) {
+std::vector<MemoryBlock> ReadFileByBlocks(const fs::path& inputFile) {
+    std::ifstream fin(inputFile, std::ios::binary);
+    if (!fin) {
+        std::cerr << "Can't open file " << inputFile << " for reading" << std::endl;
+        exit(1);
+    }
+	std::shared_ptr<Progress> progress = progressMap[inputFile.filename()];
+
 	size_t filesize = FileSize(fin);	
-    size_t readed = 0;
+	progress->size = filesize;
+    size_t read = 0;
 
     std::vector<MemoryBlock> blocks;
-    while (readed < filesize) {
+    while (read < filesize) {
         size_t size = 1 + rand() % memoryManager.maxBlockSize();
-        size = std::min(size, filesize - readed);
+        size = std::min(size, filesize - read);
 
         MemoryBlock block = memoryManager.getBlock(size);
 
         fin.read(block.data(), size);
-        readed += size;
+        read += size;
+		progress->read = read;
 
         blocks.push_back(std::move(block));
     }
+    fin.close();
 	return blocks;
 }
 
-void WriteBlocksIntoFile(const std::vector<MemoryBlock>& blocks, std::ofstream& fout) {
+void WriteBlocksIntoFile(const std::vector<MemoryBlock>& blocks, const fs::path& outputFile) {
+    std::ofstream fout(outputFile, std::ios::binary);
+    if (!fout) {
+        std::cerr << "Can't open file " << outputFile << " for writing" << std::endl;
+        exit(1);
+    }
+	std::shared_ptr<Progress> progress = progressMap[outputFile.filename()];
+	
     for (const auto& block : blocks) {
         fout.write(block.data(), block.size());
+		progress->write += block.size();
     }
+    fout.close();
 }
 
 void Free(std::vector<MemoryBlock>& blocks) {
@@ -64,28 +91,12 @@ void Free(std::vector<MemoryBlock>& blocks) {
     }
 }
 
-void CopyFile(const fs::path filename1, const fs::path filename2) {
-    std::ifstream fin(filename1, std::ios::binary);
-    std::ofstream fout(filename2, std::ios::binary);
-
-    if (!fin) {
-        std::cerr << "Can't open file " << filename1 << " for reading"
-                  << std::endl;
-        exit(1);
-    }
-    if (!fout) {
-        std::cerr << "Can't open file " << filename2 << " for writing"
-                  << std::endl;
-        exit(1);
-    }
-
+void CopyFile(const fs::path& inputFile, const fs::path& outputFile) {
     // 1. read whole input file by random blocks of [1 .. maxBlockSize] bytes
-	std::vector<MemoryBlock> blocks = ReadFileByBlocks(fin);
-    fin.close();
+	std::vector<MemoryBlock> blocks = ReadFileByBlocks(inputFile);
 
     // 2. write all blocks to the output file 
-	WriteBlocksIntoFile(blocks, fout);
-    fout.close();
+	WriteBlocksIntoFile(blocks, outputFile);
 
     // 3. free blocks
 	Free(blocks);
@@ -100,10 +111,15 @@ void CopyFilesInSingleThread(const fs::path &inputDir, const fs::path &outputDir
 
 void CopyFilesInMultipleThreads(const fs::path &inputDir, const fs::path &outputDir) {
     std::cout << "List of files in input folder '" << inputDir << "':" << std::endl;
-    std::vector<std::thread> threads;
     for (const auto &entry : fs::directory_iterator(inputDir)) {
         const fs::path filename = entry.path().filename();
         std::cout << filename << std::endl;
+		progressMap[filename] = std::make_shared<Progress>();
+    }
+
+    std::vector<std::thread> threads;
+    for (const auto &entry : fs::directory_iterator(inputDir)) {
+        const fs::path filename = entry.path().filename();
         threads.emplace_back(CopyFile, inputDir/filename, outputDir/filename);
     }
     std::cout << "\nStarted copying in " << threads.size() << " threads..."
@@ -138,7 +154,7 @@ size_t CheckArgsAndGetMemorySize(int argc, char** argv) {
 	return memorySizeMb;
 }
 
-void CheckIfDirectoryExists(const fs::path dir) {
+void CheckIfDirectoryExists(const fs::path& dir) {
     if (!fs::exists(dir)) {
         std::cerr << "Input folder " << dir << " does not exist!"
                   << std::endl;
@@ -146,7 +162,7 @@ void CheckIfDirectoryExists(const fs::path dir) {
     }
 }
 
-void CreateDirectoryIfNotExists(const fs::path dir) {
+void CreateDirectoryIfNotExists(const fs::path& dir) {
 	if(!fs::exists(dir) && !fs::create_directory(dir)) {
 		std::cerr << "Output folder " << dir << " does not exists"
 			" and can't create it!" << std::endl;
