@@ -15,6 +15,7 @@ MemoryManager& memoryManager = MemoryManager::instance();
 MemoryManager::MemoryManager() {}
 
 void MemoryManager::init(size_t memorySize) {
+	std::lock_guard<std::mutex> guard(mutex);
 	assert(initialized == false && "MemoryManager can be initialized only once");
 	initialized = true;
 
@@ -32,8 +33,8 @@ void MemoryManager::init(size_t memorySize) {
 }
 
 MemoryBlock MemoryManager::getBlock(size_t size) {
-	assert(initialized == true && "MemoryManager must be initialized before usage");
 	std::lock_guard<std::mutex> guard(mutex);
+	assert(initialized == true && "MemoryManager must be initialized before usage");
     auto it = poolMap.lower_bound(size);
     if (it == end(poolMap)) {
         std::cerr << "Can't allocate more than " +
@@ -41,11 +42,11 @@ MemoryBlock MemoryManager::getBlock(size_t size) {
                          " bytes for one block.";
         throw std::bad_alloc();
     }
-
     return it->second->getBlock(size);
 }
 
 size_t MemoryManager::maxBlockSize() const { 
+	std::lock_guard<std::mutex> guard(mutex);
 	assert(initialized == true && "MemoryManager must be initialized before usage");
 	return blockSizes.back(); 
 }
@@ -77,7 +78,6 @@ void Header(std::ostringstream& oss, int w) {
 }
 
 void MemoryManager::printStatistics() const {
-	assert(initialized == true && "MemoryManager must be initialized before usage");
 	const int w = 12;
 	std::ostringstream oss;
 	HorizontalSplit(oss, w);
@@ -85,6 +85,7 @@ void MemoryManager::printStatistics() const {
 	HorizontalSplit(oss, w);
 
 	mutex.lock();
+	assert(initialized == true && "MemoryManager must be initialized before usage");
 	for(const auto& [size, pool] : poolMap) {
 		const PoolStat& stat = pool->getStatistics();
 		oss << std::left << "|"
