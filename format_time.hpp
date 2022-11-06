@@ -8,7 +8,7 @@ class hh_mm_ss {
 	std::chrono::seconds seconds;
 	std::chrono::milliseconds milliseconds;
 public:
-	hh_mm_ss(std::chrono::milliseconds msec) {
+	explicit hh_mm_ss(std::chrono::milliseconds msec) {
 		hours = std::chrono::duration_cast<std::chrono::hours>(msec);
 		msec -= hours;
 		minutes = std::chrono::duration_cast<std::chrono::minutes>(msec);
