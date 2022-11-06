@@ -13,61 +13,20 @@
 #include <map>
 
 #include "memory_manager.hpp"
-#include "format_time.hpp"
-
-namespace fs = std::filesystem;
-
-struct Progress {
-	std::atomic<size_t> size = 0;
-	std::atomic<size_t> read = 0;
-	std::atomic<size_t> write = 0;
-};
+#include "utils.hpp"
 
 static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
-
-using std::setw;
-void ShowFileProgress(const fs::path& filename, std::shared_ptr<Progress> progress) {
-	// truncate filename if it's long 
-	size_t filenameWidth = 40;
-	std::ostringstream tmp;
-	tmp << filename;
-	std::ostringstream out;
-	out << std::left << std::setw(filenameWidth) << tmp.str().substr(0, filenameWidth-1) << " ";
-	
-	out << setw(12) << progress->size << " "
-		<< setw(12) << progress->read << " " 
-		<< setw(12) << progress->write << std::endl;
-	std::cout << out.str();
-}
-
-void ShowProgress() {
-	std::cout << std::left << setw(40) << "filename" << " "
-		<< setw(12) << "size" << " "
-		<< setw(12) << "read" << " " 
-		<< setw(12) << "write" << std::endl;
-	for(const auto& [filename, progress] : progressMap) {
-		ShowFileProgress(filename, progress);
-	}
-	std::cout << std::endl;
-}
 
 void ShowStatistics() {
 	while(!finished) {
 		memoryManager.printStatistics();
 		std::cout << std::endl;
-		ShowProgress();
+		ShowProgress(progressMap);
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 	memoryManager.printStatistics();
 	std::cout << std::endl;
-}
-
-size_t FileSize(std::ifstream& fin) {
-    fin.seekg(0, std::ios::end);
-    size_t filesize = fin.tellg();
-    fin.seekg(0, std::ios::beg);
-	return filesize;
 }
 
 std::vector<MemoryBlock> ReadFileByBlocks(const fs::path& inputFile) {
@@ -163,40 +122,6 @@ void CopyFilesInMultipleThreads(const fs::path &inputDir, const fs::path &output
 
 	finished = true;
 	statThread.join();
-}
-
-size_t CheckArgsAndGetMemorySize(int argc, char** argv) {
-    if (argc < 2) {
-        std::cout << "This program needs an integer argument." << std::endl;
-        std::cout << "Usage: " << std::endl;
-        std::cout << "\t" << argv[0] << " [size of RAM in Mb]" << std::endl;
-        exit(1);
-    }
-
-    int memorySizeMb = 0;
-    std::istringstream iss(argv[1]);
-    iss >> memorySizeMb;
-    if (iss.fail() || !iss.eof() || memorySizeMb <= 0) {
-        std::cout << "[size of RAM in Mb]: wrong input!" << std::endl;
-        exit(1);
-    }
-	return memorySizeMb;
-}
-
-void CheckIfDirectoryExists(const fs::path& dir) {
-    if (!fs::exists(dir)) {
-        std::cerr << "Input folder " << dir << " does not exist!"
-                  << std::endl;
-        exit(1);
-    }
-}
-
-void CreateDirectoryIfNotExists(const fs::path& dir) {
-	if(!fs::exists(dir) && !fs::create_directory(dir)) {
-		std::cerr << "Output folder " << dir << " does not exists"
-			" and can't create it!" << std::endl;
-		exit(1);
-	}
 }
 
 int main(int argc, char** argv) {
