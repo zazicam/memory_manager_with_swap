@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <thread>
 #include <vector>
 #include <chrono>
@@ -25,13 +26,41 @@ struct Progress {
 static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
 
+using std::setw;
+void ShowFileProgress(const fs::path& filename, std::shared_ptr<Progress> progress) {
+	// truncate filename if it's long 
+	size_t filenameWidth = 40;
+	std::ostringstream tmp;
+	tmp << filename;
+	std::ostringstream out;
+	out << std::left << std::setw(filenameWidth) << tmp.str().substr(0, filenameWidth-1) << " ";
+	
+	out << setw(12) << progress->size << " "
+		<< setw(12) << progress->read << " " 
+		<< setw(12) << progress->write << std::endl;
+	std::cout << out.str();
+}
+
+void ShowProgress() {
+	std::cout << std::left << setw(40) << "filename" << " "
+		<< setw(12) << "size" << " "
+		<< setw(12) << "read" << " " 
+		<< setw(12) << "write" << std::endl;
+	for(const auto& [filename, progress] : progressMap) {
+		ShowFileProgress(filename, progress);
+	}
+	std::cout << std::endl;
+}
+
 void ShowStatistics() {
 	while(!finished) {
 		memoryManager.printStatistics();
 		std::cout << std::endl;
+		ShowProgress();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 	memoryManager.printStatistics();
+	std::cout << std::endl;
 }
 
 size_t FileSize(std::ifstream& fin) {

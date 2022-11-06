@@ -39,5 +39,5 @@ clean:
 	rm -f $(BUILD_DIR)/$(EXECUTABLE) 
 
 run:
-	./$(BUILD_DIR)/$(EXECUTABLE) 100;  # Permission to allocate 100 Mb RAM
+	./$(BUILD_DIR)/$(EXECUTABLE) 10;  # Permission to allocate 100 Mb RAM
 	bash ./check_result.sh
