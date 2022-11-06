@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <atomic>
 #include <map>
+#include <cmath>
 
 namespace fs = std::filesystem;
 
@@ -28,6 +29,24 @@ class hh_mm_ss {
 	std::chrono::milliseconds milliseconds;
 public:
 	explicit hh_mm_ss(std::chrono::milliseconds msec); 
+};
+
+//--------------------------------------------------------------
+// To show size of file or memory in human readable format
+// Copied from here: 
+// https://en.cppreference.com/w/cpp/filesystem/file_size
+//--------------------------------------------------------------
+struct HumanReadable {
+    std::uintmax_t size{};
+  private: 
+    friend std::ostream& operator<<(std::ostream& os, HumanReadable hr) {
+        int i{};
+        double mantissa = hr.size;
+        for (; mantissa >= 1024.; mantissa /= 1024., ++i) { }
+        mantissa = std::ceil(mantissa * 10.) / 10.;
+        os << mantissa << "BKMGTPE"[i];
+        return i == 0 ? os : os << "B (" << hr.size << ')';
+    }
 };
 
 //--------------------------------------------------------------

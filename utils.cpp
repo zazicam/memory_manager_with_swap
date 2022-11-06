@@ -6,23 +6,32 @@
 // To show progress of reading and writing threads 
 //----------------------------------------------------
 using std::setw;
+
+void ProgressBar(size_t len, size_t total, size_t done, std::ostringstream& out) {
+	size_t numBars = 0;
+	if(total > 0) {
+		numBars = (len-2) * float(done) / total;	
+	}
+	out << "[" << std::string(numBars, '=') << std::string(len-numBars, ' ') << "]";
+}
+
 void ShowFileProgress(const fs::path& filename, std::shared_ptr<Progress> progress, std::ostringstream& out) {
 	// truncate filename if it's long 
-	size_t filenameWidth = 40;
+	size_t filenameWidth = 30;
 	std::ostringstream tmp;
 	tmp << filename;
 	out << std::left << std::setw(filenameWidth) << tmp.str().substr(0, filenameWidth-1) << " ";
-	out << setw(12) << progress->size << " "
-		<< setw(12) << progress->read << " " 
-		<< setw(12) << progress->write << std::endl;
+	ProgressBar(23, progress->size, progress->read, out);
+	out << "  ";
+	ProgressBar(23, progress->size, progress->write, out);
+	out << std::endl;
 }
 
 void ShowProgress(const std::map<fs::path, std::shared_ptr<Progress>> progressMap) {
 	std::ostringstream out;
-	out << std::left << setw(40) << "filename" << " "
-		<< setw(12) << "size" << " "
-		<< setw(12) << "read" << " " 
-		<< setw(12) << "write" << std::endl;
+	out << std::left << setw(30) << "filename" << " "
+		<< setw(23) << "read" << "  "
+		<< setw(23) << "write" << std::endl;
 	for(const auto& [filename, progress] : progressMap) {
 		ShowFileProgress(filename, progress, out);
 	}

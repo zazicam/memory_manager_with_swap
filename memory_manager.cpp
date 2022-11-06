@@ -9,6 +9,7 @@
 #include <iomanip>
 
 #include "memory_manager.hpp"
+#include "utils.hpp"
 
 MemoryManager& memoryManager = MemoryManager::instance();
 
@@ -70,7 +71,7 @@ void HorizontalSplit(std::ostringstream& oss, int w) {
 void Header(std::ostringstream& oss, int w) {
 	oss << std::left << "|"
 		<< " " << setw(w) << "Size (byte)" << "|"
-		<< " " << setw(w) << "Number (ram)" << "|"
+		<< " " << setw(w) << "Blocks in RAM" << "|"
 		<< " " << setw(w) << "Used" << "|" 
 		<< " " << setw(w) << "Locked" << "|" 
 		<< " " << setw(w) << "Swapped" << "|" 
@@ -78,12 +79,14 @@ void Header(std::ostringstream& oss, int w) {
 }
 
 void MemoryManager::printStatistics() const {
-	const int w = 12;
+	const int w = 14;
 	std::ostringstream oss;
 	HorizontalSplit(oss, w);
 	Header(oss, w);
 	HorizontalSplit(oss, w);
 
+	size_t ramUsage = 0;
+	size_t swapUsage = 0;
 	mutex.lock();
 	assert(initialized == true && "MemoryManager must be initialized before usage");
 	for(const auto& [size, pool] : poolMap) {
@@ -95,9 +98,13 @@ void MemoryManager::printStatistics() const {
 			<< " " << setw(w) << stat.lockedCounter << "|" 
 			<< " " << setw(w) << stat.swappedCounter << "|"
 			<< endl;
+		ramUsage += size * stat.usedCounter;
+		swapUsage += size * stat.swappedCounter;
 	}
 	mutex.unlock();
 
 	HorizontalSplit(oss, w);
+	oss << "Memory manager usage [ RAM: " << HumanReadable{ramUsage}  
+		<< "Disk (swap): " << HumanReadable{swapUsage} << "]" << std::endl;
 	std::cout << oss.str().c_str();
 }

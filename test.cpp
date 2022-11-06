@@ -18,15 +18,18 @@
 static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
 
-void ShowStatistics() {
-	while(!finished) {
-		memoryManager.printStatistics();
-		std::cout << std::endl;
-		ShowProgress(progressMap);
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-	}
+void PrintStatisticsAndProgress() {
 	memoryManager.printStatistics();
 	std::cout << std::endl;
+	ShowProgress(progressMap);
+}
+
+void ProcessInfo() {
+	while(!finished) {
+		PrintStatisticsAndProgress();
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+	PrintStatisticsAndProgress();
 }
 
 std::vector<MemoryBlock> ReadFileByBlocks(const fs::path& inputFile) {
