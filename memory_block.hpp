@@ -37,7 +37,10 @@ class MemoryBlock {
 		operator T*() { return ptr; }
 	};
 
+	void swap(MemoryBlock &other);
+
   public:
+    MemoryBlock();
     MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
                 bool locked_, MemoryPool *pool);
 

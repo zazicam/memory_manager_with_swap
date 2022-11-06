@@ -15,25 +15,31 @@
 // --------------------------------------------------------
 // class MemoryBlock
 // --------------------------------------------------------
+MemoryBlock::MemoryBlock() 
+    : ptr_(nullptr), id_(0), capacity_(0), size_(0)
+	, locked_(false), pool_(nullptr), moved_(false) {}
+
 MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
                          bool locked, MemoryPool *pool)
     : ptr_(ptr), id_(id), capacity_(capacity), size_(size)
 	, locked_(locked), pool_(pool), moved_(false) {}
 
-MemoryBlock::MemoryBlock(MemoryBlock&& other) 
-    : ptr_(other.ptr_), id_(other.id_), capacity_(other.capacity_), size_(other.size_)
-	, locked_(other.locked_), pool_(other.pool_), moved_(false) 
-	{
-		other.ptr_ = nullptr;
-		other.moved_ = true;
-	}
+void MemoryBlock::swap(MemoryBlock &other) {
+	std::swap(ptr_, other.ptr_);
+	std::swap(id_, other.id_);
+	std::swap(capacity_, other.capacity_);
+	std::swap(size_, other.size_);
+	std::swap(locked_, other.locked_);
+	std::swap(pool_, other.pool_);
+	std::swap(moved_, other.moved_);
+}
+
+MemoryBlock::MemoryBlock(MemoryBlock&& other) {
+	swap(other);
+}
 
 MemoryBlock& MemoryBlock::operator=(MemoryBlock&& other) {
-	if(this == &other)
-		return *this;
-
-	other.ptr_ = nullptr;
-	other.moved_ = true;
+	swap(other);
 	return *this;
 }
 
