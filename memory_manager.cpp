@@ -105,6 +105,6 @@ void MemoryManager::printStatistics() const {
 
 	HorizontalSplit(oss, w);
 	oss << "Memory manager usage [ RAM: " << HumanReadable{ramUsage}  
-		<< "Disk (swap): " << HumanReadable{swapUsage} << "]" << std::endl;
+		<< " Disk (swap): " << HumanReadable{swapUsage} << "]" << std::endl;
 	std::cout << oss.str().c_str();
 }

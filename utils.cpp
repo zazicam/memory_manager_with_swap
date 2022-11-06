@@ -10,7 +10,7 @@ using std::setw;
 void ProgressBar(size_t len, size_t total, size_t done, std::ostringstream& out) {
 	size_t numBars = 0;
 	if(total > 0) {
-		numBars = (len-2) * float(done) / total;	
+		numBars = len * float(done) / total;	
 	}
 	out << "[" << std::string(numBars, '=') << std::string(len-numBars, ' ') << "]";
 }

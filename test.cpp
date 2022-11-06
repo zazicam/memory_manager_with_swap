@@ -96,8 +96,17 @@ void CopyFile(const fs::path& inputFile, const fs::path& outputFile) {
 void CopyFilesInSingleThread(const fs::path &inputDir, const fs::path &outputDir) {
     for (const auto &entry : fs::directory_iterator(inputDir)) {
         const fs::path filename = entry.path().filename();
+		progressMap[filename] = std::make_shared<Progress>();
+    }
+
+	std::thread infoThread(DisplayInformation);
+    for (const auto &entry : fs::directory_iterator(inputDir)) {
+        const fs::path filename = entry.path().filename();
         CopyFile(inputDir/filename, outputDir/filename);
     }
+
+	finished = true;
+	infoThread.join();
 }
 
 void CopyFilesInMultipleThreads(const fs::path &inputDir, const fs::path &outputDir) {
@@ -138,8 +147,8 @@ int main(int argc, char** argv) {
 
 	auto startTime = std::chrono::steady_clock::now();
 
-    CopyFilesInSingleThread(inputDir, outputDir);
-//    CopyFilesInMultipleThreads(inputDir, outputDir);
+//    CopyFilesInSingleThread(inputDir, outputDir);
+    CopyFilesInMultipleThreads(inputDir, outputDir);
 
 	auto endTime = std::chrono::steady_clock::now();
 
