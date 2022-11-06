@@ -24,7 +24,7 @@ void PrintStatisticsAndProgress() {
 	ShowProgress(progressMap);
 }
 
-void ProcessInfo() {
+void DisplayInformation() {
 	while(!finished) {
 		PrintStatisticsAndProgress();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -116,7 +116,7 @@ void CopyFilesInMultipleThreads(const fs::path &inputDir, const fs::path &output
     std::cout << "\nStarted copying in " << threads.size() << " threads..."
               << std::endl;
 
-	std::thread statThread(ShowStatistics);
+	std::thread infoThread(DisplayInformation);
 
     for (std::thread &t : threads) {
         t.join();
@@ -124,7 +124,7 @@ void CopyFilesInMultipleThreads(const fs::path &inputDir, const fs::path &output
     threads.clear();
 
 	finished = true;
-	statThread.join();
+	infoThread.join();
 }
 
 int main(int argc, char** argv) {
@@ -138,8 +138,8 @@ int main(int argc, char** argv) {
 
 	auto startTime = std::chrono::steady_clock::now();
 
-//    CopyFilesInSingleThread(inputDir, outputDir);
-    CopyFilesInMultipleThreads(inputDir, outputDir);
+    CopyFilesInSingleThread(inputDir, outputDir);
+//    CopyFilesInMultipleThreads(inputDir, outputDir);
 
 	auto endTime = std::chrono::steady_clock::now();
 
