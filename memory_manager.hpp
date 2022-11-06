@@ -7,6 +7,9 @@
 
 #include "memory_pool.hpp"
 
+//-------------------------------------
+// Singleton (uses single swap folder)
+//-------------------------------------
 class MemoryManager {
 	bool initialized = false;
     const std::vector<size_t> blockSizes{16,  32,   64,   128, 256,
@@ -34,4 +37,5 @@ class MemoryManager {
 	void printStatistics() const;
 };
 
+// An instance created in memory_manager.cpp 
 extern MemoryManager& memoryManager;
