@@ -19,7 +19,6 @@ void MemoryManager::init(size_t memorySize) {
 	std::lock_guard<std::mutex> guard(mutex);
 	assert(initialized == false && "MemoryManager can be initialized only once");
 	initialized = true;
-	this->memorySize = memorySize;
 
 	this->memorySize = memorySize;
     const size_t packOfBlocksSize =

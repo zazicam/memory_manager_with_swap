@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
 
 	auto endTime = std::chrono::steady_clock::now();
 
-    std::cout << "Copying completed in " 
+    std::cout << "\nCopying completed in " 
 		<< utils::hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) }
 		<< "\n" << std::endl;
 

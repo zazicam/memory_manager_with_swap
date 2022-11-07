@@ -51,8 +51,7 @@ void ShowProgress(const std::map<fs::path, std::shared_ptr<Progress>>& progressM
 		<< setw(10) << "size"
 		<< setw(22) << "read"
 		<< setw(22) << "write" << std::endl;
-	std::cout << std::setw(80) << std::setfill('-') << "-" << std::setfill(' ')
-		<< std::endl;
+
 	size_t totalSize = 0;
 	size_t totalRead = 0;
 	size_t totalWrite = 0;
