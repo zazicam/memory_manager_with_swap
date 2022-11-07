@@ -21,6 +21,8 @@ static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
 
 void PrintStatisticsAndProgress() {
+//	utils::ClearConsole();
+	std::cout << "Memory pools statistics:\n";
 	memoryManager.printStatistics();
 	utils::ShowProgress(progressMap);
 }
@@ -156,7 +158,7 @@ int main(int argc, char** argv) {
 
 	auto endTime = std::chrono::steady_clock::now();
 
-    std::cout << "\nCopying completed in " 
+    std::cout << "Copying completed in " 
 		<< utils::hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) }
 		<< "\n" << std::endl;
 

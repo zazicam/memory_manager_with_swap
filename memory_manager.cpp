@@ -20,6 +20,7 @@ void MemoryManager::init(size_t memorySize) {
 	assert(initialized == false && "MemoryManager can be initialized only once");
 	initialized = true;
 
+	this->memorySize = memorySize;
     const size_t packOfBlocksSize =
         std::reduce(begin(blockSizes), end(blockSizes));
     const size_t N = memorySize / packOfBlocksSize;
@@ -104,7 +105,8 @@ void MemoryManager::printStatistics() const {
 	mutex.unlock();
 
 	HorizontalSplit(out, w);
-	out << "Memory manager usage [ RAM: " << utils::HumanReadable{ramUsage}  
-		<< " Disk (swap): " << utils::HumanReadable{swapUsage} << "]\n\n";
+	out << "Memory manager usage [Limit RAM: " << utils::HumanReadable{memorySize} << ", "
+	    << "Used RAM: " << utils::HumanReadable{ramUsage} << ", "
+		<< "Disk(swap): " << utils::HumanReadable{swapUsage} << "]\n";
     puts(out.str().c_str());
 }

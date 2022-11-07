@@ -12,6 +12,7 @@
 //-------------------------------------
 class MemoryManager {
 	bool initialized = false;
+	size_t memorySize;
     const std::vector<size_t> blockSizes{16,  32,   64,   128, 256,
                                          512, 1024, 2048, 4096};
     std::map<size_t, std::unique_ptr<MemoryPool>> poolMap;

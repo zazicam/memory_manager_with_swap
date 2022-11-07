@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <filesystem>
 #include <atomic>
 #include <map>
@@ -33,23 +34,46 @@ class hh_mm_ss {
     explicit hh_mm_ss(std::chrono::milliseconds msec);
 };
 
+//-------------------------------------------------------------------
+// Allows to move the cursor to the desired position in the line 
+// using control characters. Moving does not affect the contents 
+// of the console until you print smth in a new position.
+//-------------------------------------------------------------------
+struct tab {
+	int pos = 0;
+private:
+	friend std::ostream& operator<<(std::ostream& out, const tab& t) {
+		return out << '\r' 
+			<< std::string(1 + t.pos / 8, '\t') 
+			<< std::string(8 - t.pos % 8, '\b');
+	}
+};
+
 //--------------------------------------------------------------
 // To show size of file or memory in human readable format
-// Copied from here:
+// Copied from here (with small changes):
 // https://en.cppreference.com/w/cpp/filesystem/file_size
 //--------------------------------------------------------------
 struct HumanReadable {
-    std::uintmax_t size{};
-
+    size_t size;
+	bool showInBytes;
+	HumanReadable(size_t size, bool showInBytes = false) 
+		: size(size), showInBytes(showInBytes) {}
   private:
     friend std::ostream &operator<<(std::ostream &os, HumanReadable hr) {
+		std::ostringstream out;
         int i{};
         double mantissa = static_cast<double>(hr.size);
         for (; mantissa >= 1024.; mantissa /= 1024., ++i) {
         }
         mantissa = std::ceil(mantissa * 10.) / 10.;
-        os << mantissa << "BKMGTPE"[i];
-        return i == 0 ? os : os << "B (" << hr.size << ')';
+        out << mantissa << " " << "BKMGTPE"[i];
+		if(i>0) {
+			out << "B";
+			if(hr.showInBytes) 
+				out << " (" << hr.size << ')';
+		}
+		return os << out.str();
     }
 };
 
