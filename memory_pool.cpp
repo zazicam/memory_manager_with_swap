@@ -10,8 +10,6 @@
 #include "logger.hpp"
 #include "memory_pool.hpp"
 
-#define UNUSED(var) ((void)var) // for debug
-
 // --------------------------------------------------------
 // class MemoryPool
 // --------------------------------------------------------
@@ -59,7 +57,7 @@ MemoryPool::~MemoryPool() {
 MemoryBlock MemoryPool::getBlock(size_t size) {
     std::lock_guard<std::mutex> poolGuard(poolMutex);
 
-    size_t blockId = 1;
+    SwapIdType blockId = 1;
     void *ptr = privateAlloc();
 
     size_t blockIndex = 0;
@@ -142,7 +140,7 @@ void MemoryPool::unlockBlock(void *ptr) {
 	stat.lockedCounter--;
 }
 
-void MemoryPool::freeBlock(void *ptr, size_t id) {
+void MemoryPool::freeBlock(void *ptr, SwapIdType id) {
     std::lock_guard<std::mutex> poolGuard(poolMutex);
     lockBlock(ptr);
     swapMutex.lock();

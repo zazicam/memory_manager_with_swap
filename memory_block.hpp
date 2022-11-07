@@ -2,6 +2,7 @@
 
 #include <cstddef>
 
+#include "swap.hpp"
 #include "logger.hpp"
 
 class MemoryPool;
@@ -11,7 +12,7 @@ class MemoryPool;
 // --------------------------------------------------------
 class MemoryBlock {
     void* ptr_;
-    size_t id_;
+    SwapIdType id_;
     size_t capacity_;
     size_t size_;
 	bool locked_;
@@ -41,7 +42,7 @@ class MemoryBlock {
 
   public:
     MemoryBlock();
-    MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
+    MemoryBlock(void *ptr, SwapIdType id, size_t capacity, size_t size,
                 bool locked_, MemoryPool *pool);
 
     MemoryBlock(const MemoryBlock &) = delete;

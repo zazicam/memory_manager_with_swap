@@ -10,8 +10,6 @@
 #include "memory_block.hpp"
 #include "memory_pool.hpp"
 
-#define UNUSED(var) ((void)var) // for debug
-
 // --------------------------------------------------------
 // class MemoryBlock
 // --------------------------------------------------------
@@ -19,7 +17,7 @@ MemoryBlock::MemoryBlock()
     : ptr_(nullptr), id_(0), capacity_(0), size_(0)
 	, locked_(false), pool_(nullptr), moved_(false) {}
 
-MemoryBlock::MemoryBlock(void *ptr, size_t id, size_t capacity, size_t size,
+MemoryBlock::MemoryBlock(void *ptr, SwapIdType id, size_t capacity, size_t size,
                          bool locked, MemoryPool *pool)
     : ptr_(ptr), id_(id), capacity_(capacity), size_(size)
 	, locked_(locked), pool_(pool), moved_(false) {}

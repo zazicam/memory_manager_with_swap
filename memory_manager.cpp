@@ -58,9 +58,9 @@ size_t MemoryManager::maxBlockSize() const {
 using std::setw;
 using std::endl;
 
-void HorizontalSplit(std::ostringstream& oss, int w) {
-	oss << std::setfill('-') << std::left << "+";
-	oss	<< setw(w+1) << "-" << "+"
+void HorizontalSplit(std::ostringstream& out, int w) {
+	out << std::setfill('-') << std::left << "+";
+	out	<< setw(w+1) << "-" << "+"
 		<< setw(w+1) << "-" << "+" 
 		<< setw(w+1) << "-" << "+" 
 		<< setw(w+1) << "-" << "+" 
@@ -68,8 +68,8 @@ void HorizontalSplit(std::ostringstream& oss, int w) {
 		<< endl << std::setfill(' ');
 }
 
-void Header(std::ostringstream& oss, int w) {
-	oss << std::left << "|"
+void Header(std::ostringstream& out, int w) {
+	out << std::left << "|"
 		<< " " << setw(w) << "Size (byte)" << "|"
 		<< " " << setw(w) << "Blocks in RAM" << "|"
 		<< " " << setw(w) << "Used" << "|" 
@@ -80,10 +80,10 @@ void Header(std::ostringstream& oss, int w) {
 
 void MemoryManager::printStatistics() const {
 	const int w = 14;
-	std::ostringstream oss;
-	HorizontalSplit(oss, w);
-	Header(oss, w);
-	HorizontalSplit(oss, w);
+	std::ostringstream out;
+	HorizontalSplit(out, w);
+	Header(out, w);
+	HorizontalSplit(out, w);
 
 	size_t ramUsage = 0;
 	size_t swapUsage = 0;
@@ -91,7 +91,7 @@ void MemoryManager::printStatistics() const {
 	assert(initialized == true && "MemoryManager must be initialized before usage");
 	for(const auto& [size, pool] : poolMap) {
 		const PoolStat& stat = pool->getStatistics();
-		oss << std::left << "|"
+		out << std::left << "|"
 		    << " " << setw(w) << size << "|"
 			<< " " << setw(w) << pool->getNumBlocks() << "|"
 			<< " " << setw(w) << stat.usedCounter << "|"
@@ -103,8 +103,8 @@ void MemoryManager::printStatistics() const {
 	}
 	mutex.unlock();
 
-	HorizontalSplit(oss, w);
-	oss << "Memory manager usage [ RAM: " << HumanReadable{ramUsage}  
-		<< " Disk (swap): " << HumanReadable{swapUsage} << "]" << std::endl;
-	std::cout << oss.str().c_str();
+	HorizontalSplit(out, w);
+	out << "Memory manager usage [ RAM: " << utils::HumanReadable{ramUsage}  
+		<< " Disk (swap): " << utils::HumanReadable{swapUsage} << "]\n\n";
+    puts(out.str().c_str());
 }

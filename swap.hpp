@@ -6,11 +6,12 @@
 #include <limits>
 #include <mutex>
 #include <vector>
+#include <filesystem>
 
 //-------------------------------------------
 // swap config
 //-------------------------------------------
-static std::string SWAP_DIR_PATH = "swap";
+static const std::string SWAP_DIR_PATH = "swap";
 
 using SwapIdType = uint8_t;
 constexpr SwapIdType MAX_SWAP_LEVEL = std::numeric_limits<SwapIdType>::max();
@@ -51,7 +52,7 @@ class RamSwapLevel : public SwapLevel {
 };
 
 class DiskSwapLevel : public SwapLevel {
-    std::string filepath;
+    std::filesystem::path filepath;
     std::fstream file;
     std::mutex mutex;
 
@@ -75,25 +76,23 @@ class DiskSwap {
 
     size_t FindEmptyLevel(size_t blockIndex);
     size_t FindLastLevel(size_t blockIndex);
-    size_t FindSwapLevel(size_t blockIndex, size_t id);
+    size_t FindSwapLevel(size_t blockIndex, SwapIdType id);
 
   public:
     DiskSwap(void *poolAddress, size_t numBlocks, size_t blockSize);
 
-    void MarkBlockAllocated(size_t blockIndex, size_t id);
-    void MarkBlockFreed(size_t blockIndex, size_t level);
+    void MarkBlockAllocated(size_t blockIndex, SwapIdType id);
+    void MarkBlockFreed(size_t blockIndex, SwapIdType id);
 
-    bool isBlockInRam(size_t blockIndex, const size_t id);
-    bool isBlockInSwap(size_t blockIndex, size_t id);
+    bool isBlockInRam(size_t blockIndex, SwapIdType id);
+    bool isBlockInSwap(size_t blockIndex, SwapIdType id);
 
-    void LoadBlockIntoRam(size_t blockIndex, size_t id);
+    void LoadBlockIntoRam(size_t blockIndex, SwapIdType id);
     bool HasSwappedBlocks(size_t blockIndex);
     void ReturnLastSwappedBlockIntoRam(size_t blockIndex);
 
     void Swap(size_t blockIndex, size_t swapLevel);
     SwapIdType Swap(size_t blockIndex);
-
-    void debugPrint(); // DEBUG
 
     ~DiskSwap();
 };

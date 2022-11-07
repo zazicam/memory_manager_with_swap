@@ -1,7 +1,9 @@
 #include <fstream>
+#include <sstream>
 
 #include "utils.hpp"
 
+namespace utils {
 //----------------------------------------------------
 // To show progress of reading and writing threads 
 //----------------------------------------------------
@@ -10,9 +12,9 @@ using std::setw;
 void ProgressBar(size_t len, size_t total, size_t done, std::ostringstream& out) {
 	size_t numBars = 0;
 	if(total > 0) {
-		numBars = len * float(done) / total;	
+		numBars = std::lround(len * static_cast<double>(done) / total);	
 	}
-	out << "[" << std::string(numBars, '=') << std::string(len-numBars, ' ') << "]";
+	out << "[" << std::string(numBars, '=') << std::string(len - numBars, ' ') << "]";
 }
 
 void ShowFileProgress(const fs::path& filename, std::shared_ptr<Progress> progress, std::ostringstream& out) {
@@ -27,7 +29,8 @@ void ShowFileProgress(const fs::path& filename, std::shared_ptr<Progress> progre
 	out << std::endl;
 }
 
-void ShowProgress(const std::map<fs::path, std::shared_ptr<Progress>> progressMap) {
+void ShowProgress(
+    const std::map<fs::path, std::shared_ptr<Progress>>& progressMap) {
 	std::ostringstream out;
 	out << std::left << setw(30) << "filename" << " "
 		<< setw(23) << "read" << "  "
@@ -35,7 +38,8 @@ void ShowProgress(const std::map<fs::path, std::shared_ptr<Progress>> progressMa
 	for(const auto& [filename, progress] : progressMap) {
 		ShowFileProgress(filename, progress, out);
 	}
-	std::cout << out.str() << std::endl;
+	//std::cout << out.str() << std::endl;
+    puts(out.str().c_str());
 }
 
 //--------------------------------------------------------------
@@ -102,3 +106,7 @@ size_t CheckArgsAndGetMemorySize(int argc, char** argv) {
     }
 	return memorySizeMb;
 }
+
+void ClearConsole() { system("@cls||clear"); }
+
+} // namespace utils

@@ -15,13 +15,14 @@
 #include "memory_manager.hpp"
 #include "utils.hpp"
 
+using utils::Progress;
+
 static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
 
 void PrintStatisticsAndProgress() {
 	memoryManager.printStatistics();
-	std::cout << std::endl;
-	ShowProgress(progressMap);
+	utils::ShowProgress(progressMap);
 }
 
 void DisplayInformation() {
@@ -40,7 +41,7 @@ std::vector<MemoryBlock> ReadFileByBlocks(const fs::path& inputFile) {
     }
 	std::shared_ptr<Progress> progress = progressMap[inputFile.filename()];
 
-	size_t filesize = FileSize(fin);	
+	size_t filesize = utils::FileSize(fin);	
 	progress->size = filesize;
     size_t read = 0;
 
@@ -96,7 +97,8 @@ void CopyFile(const fs::path& inputFile, const fs::path& outputFile) {
 void CopyFilesInSingleThread(const fs::path &inputDir, const fs::path &outputDir) {
     for (const auto &entry : fs::directory_iterator(inputDir)) {
         const fs::path filename = entry.path().filename();
-		progressMap[filename] = std::make_shared<Progress>();
+        std::cout << filename << std::endl;
+        progressMap[filename] = std::make_shared<Progress>();
     }
 
 	std::thread infoThread(DisplayInformation);
@@ -137,12 +139,14 @@ void CopyFilesInMultipleThreads(const fs::path &inputDir, const fs::path &output
 }
 
 int main(int argc, char** argv) {
+    setlocale(0, "");
+
     const fs::path inputDir = "./input";
     const fs::path outputDir = "./output";
-	CheckIfDirectoryExists(inputDir);
-	CreateDirectoryIfNotExists(outputDir);
-	
-	size_t memorySizeMb = CheckArgsAndGetMemorySize(argc, argv);
+    utils::CheckIfDirectoryExists(inputDir);
+    utils::CreateDirectoryIfNotExists(outputDir);
+
+	size_t memorySizeMb = utils::CheckArgsAndGetMemorySize(argc, argv);
     memoryManager.init(memorySizeMb * 1024 * 1024);
 
 	auto startTime = std::chrono::steady_clock::now();
@@ -153,7 +157,7 @@ int main(int argc, char** argv) {
 	auto endTime = std::chrono::steady_clock::now();
 
     std::cout << "\nCopying completed in " 
-		<< hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) }
+		<< utils::hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) }
 		<< "\n" << std::endl;
 
     return 0;

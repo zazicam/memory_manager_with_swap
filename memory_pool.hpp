@@ -55,7 +55,7 @@ class MemoryPool {
     void unlockBlock(void *ptr);
 
     MemoryBlock getBlock(size_t size);
-    void freeBlock(void *ptr, size_t id);
+    void freeBlock(void *ptr, SwapIdType id);
 	
 	size_t getNumBlocks() const;
 	const PoolStat& getStatistics() const;

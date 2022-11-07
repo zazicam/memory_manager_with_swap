@@ -132,7 +132,7 @@ DiskSwap::DiskSwap(void *poolAddress, size_t numBlocks, size_t blockSize)
 {
 }
 
-void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
+void DiskSwap::LoadBlockIntoRam(size_t blockIndex, SwapIdType id) {
     if (id == swapTable.at(RAM)->at(blockIndex)) {
         ;
     } else {
@@ -141,7 +141,7 @@ void DiskSwap::LoadBlockIntoRam(size_t blockIndex, size_t id) {
     }
 }
 
-size_t DiskSwap::FindSwapLevel(size_t blockIndex, size_t id) {
+size_t DiskSwap::FindSwapLevel(size_t blockIndex, SwapIdType id) {
     assert(blockIndex < numBlocks);
     size_t swapLevel = 0;
     for (size_t level = 1; level < numLevels; ++level) {
@@ -170,11 +170,11 @@ size_t DiskSwap::FindLastLevel(size_t blockIndex) {
     return level;
 }
 
-void DiskSwap::MarkBlockAllocated(size_t blockIndex, size_t id) {
+void DiskSwap::MarkBlockAllocated(size_t blockIndex, SwapIdType id) {
     swapTable.at(RAM)->at(blockIndex) = id;
 }
 
-void DiskSwap::MarkBlockFreed(size_t blockIndex, size_t id) {
+void DiskSwap::MarkBlockFreed(size_t blockIndex, SwapIdType id) {
     size_t goalLevel = FindSwapLevel(blockIndex, id);
     swapTable.at(goalLevel)->at(blockIndex) = 0;
 }
@@ -190,11 +190,11 @@ void DiskSwap::Swap(size_t blockIndex, size_t swapLevel) {
               swapTable.at(swapLevel)->at(blockIndex));
 }
 
-bool DiskSwap::isBlockInRam(size_t blockIndex, const size_t id) {
+bool DiskSwap::isBlockInRam(size_t blockIndex, const SwapIdType id) {
     return id == swapTable.at(RAM)->at(blockIndex);
 }
 
-bool DiskSwap::isBlockInSwap(size_t blockIndex, size_t id) {
+bool DiskSwap::isBlockInSwap(size_t blockIndex, SwapIdType id) {
     return id != swapTable.at(RAM)->at(blockIndex);
 }
 
