@@ -88,5 +88,6 @@ void ShowProgress(
     const std::map<fs::path, std::shared_ptr<Progress>>& progressMap);
 
 void ClearConsole();
+fs::path TruncatePath(const fs::path& path, size_t width); 
 
 } // namespace utils

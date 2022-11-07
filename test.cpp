@@ -21,8 +21,7 @@ static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
 
 void PrintStatisticsAndProgress() {
-//	utils::ClearConsole();
-	std::cout << "Memory pools statistics:\n";
+	std::cout << "Memory pool statistics:" << std::endl;
 	memoryManager.printStatistics();
 	utils::ShowProgress(progressMap);
 }
