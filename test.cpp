@@ -31,7 +31,7 @@ void DisplayInformation();
 
 //---------------------------------------------------------------
 // The main() function is here with some global variables just 
-// to control threads executions and display their progress. 
+// to control threads execution and display their progress. 
 //---------------------------------------------------------------
 static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
