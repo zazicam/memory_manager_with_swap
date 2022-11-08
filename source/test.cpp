@@ -12,8 +12,8 @@
 #include <thread>
 #include <vector>
 
-#include "memory_manager.hpp"
-#include "utils.hpp"
+#include "memory_manager/memory_manager.hpp"
+#include "utils/utils.hpp"
 
 namespace fs = std::filesystem;
 using utils::Progress;

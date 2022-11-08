@@ -8,7 +8,6 @@
 #include <iostream>
 #include <vector>
 
-#include "logger.hpp"
 #include "memory_pool.hpp"
 #include "swap.hpp"
 

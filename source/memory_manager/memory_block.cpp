@@ -6,7 +6,7 @@
 #include <mutex>
 #include <thread>
 
-#include "logger.hpp"
+#include "../utils/logger.hpp"
 #include "memory_block.hpp"
 #include "memory_pool.hpp"
 

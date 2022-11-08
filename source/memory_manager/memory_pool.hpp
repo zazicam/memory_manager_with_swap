@@ -7,7 +7,7 @@
 #include <queue>
 #include <vector>
 
-#include "logger.hpp"
+#include "../utils/logger.hpp"
 #include "memory_block.hpp"
 #include "swap.hpp"
 

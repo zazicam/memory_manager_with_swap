@@ -2,7 +2,6 @@
 
 #include <cstddef>
 
-#include "logger.hpp"
 #include "swap.hpp"
 
 class MemoryPool;
