@@ -33,14 +33,14 @@ public:
 	void ProcessStream(std::ostringstream& oss); 
  
     template<typename T> 
-    Table& operator<<(T smth) { 
+    Table& operator<<(T&& smth) { 
         std::ostringstream oss; 
         oss << smth; 
 		ProcessStream(oss);
         return *this; 
     } 
 
-    Table& operator<<(std::filesystem::path path) { 
+    Table& operator<<(std::filesystem::path&& path) { 
         std::ostringstream oss; 
         oss << path.string(); // just to remove quotes
 		ProcessStream(oss);

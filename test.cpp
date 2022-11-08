@@ -21,8 +21,9 @@ static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
 
 void PrintStatisticsAndProgress() {
-	std::cout << "Memory pool statistics:" << std::endl;
+	std::cout << "\nMemory pool statistics:" << std::endl;
 	memoryManager.printStatistics();
+	std::cout << "\nCopy folder test progress:" << std::endl;
 	utils::ShowProgress(progressMap);
 }
 

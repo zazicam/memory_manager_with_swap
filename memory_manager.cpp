@@ -10,6 +10,7 @@
 
 #include "memory_manager.hpp"
 #include "utils.hpp"
+#include "table.hpp"
 
 MemoryManager& memoryManager = MemoryManager::instance();
 
@@ -53,35 +54,13 @@ size_t MemoryManager::maxBlockSize() const {
 //------------------------------
 // Show statistics like a table 
 //------------------------------
-using std::setw;
-using std::endl;
-
-void HorizontalSplit(std::ostringstream& out, int w) {
-	out << std::setfill('-') << std::left << "+";
-	out	<< setw(w+1) << "-" << "+"
-		<< setw(w+1) << "-" << "+" 
-		<< setw(w+1) << "-" << "+" 
-		<< setw(w+1) << "-" << "+" 
-		<< setw(w+1) << "-" << "+" 
-		<< endl << std::setfill(' ');
-}
-
-void Header(std::ostringstream& out, int w) {
-	out << std::left << "|"
-		<< " " << setw(w) << "Size (byte)" << "|"
-		<< " " << setw(w) << "Blocks in RAM" << "|"
-		<< " " << setw(w) << "Used" << "|" 
-		<< " " << setw(w) << "Locked" << "|" 
-		<< " " << setw(w) << "Swapped" << "|" 
-		<< endl;
-}
+using utils::Table;
+using utils::hr;
 
 void MemoryManager::printStatistics() const {
-	const int w = 14;
-	std::ostringstream out;
-	HorizontalSplit(out, w);
-	Header(out, w);
-	HorizontalSplit(out, w);
+	Table table({12, 14, 14, 9, 12, 12});
+	table << hr;
+	table << "Block size" << "Blocks (RAM)" << "Used" << "Locked" << "Swapped" << "Swap level" << hr;
 
 	size_t ramUsage = 0;
 	size_t swapUsage = 0;
@@ -89,21 +68,22 @@ void MemoryManager::printStatistics() const {
 	assert(memorySize != 0 && "MemoryManager must be initialized before usage");
 	for(const auto& [size, pool] : poolMap) {
 		const PoolStat& stat = pool->getStatistics();
-		out << std::left << "|"
-		    << " " << setw(w) << size << "|"
-			<< " " << setw(w) << pool->getNumBlocks() << "|"
-			<< " " << setw(w) << stat.usedCounter << "|"
-			<< " " << setw(w) << stat.lockedCounter << "|" 
-			<< " " << setw(w) << stat.swappedCounter << "|"
-			<< endl;
+
+		table << size
+			<< pool->getNumBlocks()
+			<< stat.usedCounter 
+			<< stat.lockedCounter 
+			<< stat.swappedCounter
+			<< stat.swapLevels;
+
 		ramUsage += size * stat.usedCounter;
 		swapUsage += size * stat.swappedCounter;
 	}
 	mutex.unlock();
-
-	HorizontalSplit(out, w);
-	out << "Memory manager usage [Limit RAM: " << utils::HumanReadable{memorySize} << ", "
+	
+	table << hr;
+	std::cout << table;
+	std::cout << "Memory manager usage [Limit RAM: " << utils::HumanReadable{memorySize} << ", "
 	    << "Used RAM: " << utils::HumanReadable{ramUsage} << ", "
 		<< "Disk(swap): " << utils::HumanReadable{swapUsage} << "]\n";
-    puts(out.str().c_str());
 }
