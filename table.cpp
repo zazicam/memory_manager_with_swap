@@ -7,7 +7,14 @@
 #include "table.hpp"
  
 namespace fs = std::filesystem; 
- 
+
+namespace utils {
+//---------------------------------------
+// Convinient class for building tables
+// It truncates content automaticaly to
+// the column width.
+//---------------------------------------
+
 fs::path TruncatePath(const fs::path& path, size_t width) { 
     return fs::path{ path.u32string().substr(0, width) }; 
 } 
@@ -49,6 +56,7 @@ void Table::ProcessStream(std::ostringstream& oss) {
 }
 
 Table& Table::operator<<(HorizontalRule hr) { 
+	hr.unused();
 	for (const auto& width : columnWidth) { 
 		buf << '+' << std::string(width, '-'); 
 	} 
@@ -57,3 +65,4 @@ Table& Table::operator<<(HorizontalRule hr) {
 	return *this; 
 } 
 
+} // namespace utils

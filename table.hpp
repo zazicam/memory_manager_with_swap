@@ -3,14 +3,19 @@
 #include <vector> 
 #include <string> 
 #include <sstream> 
+#include <filesystem>
 
+namespace utils {
 //---------------------------------------
 // Convinient class for building tables
 // It truncates content automaticaly to
 // the column width.
 //---------------------------------------
 
-struct HorizontalRule {}; 
+struct HorizontalRule {
+	void unused() {}
+}; 
+
 extern const HorizontalRule& hr;
  
 class Table { 
@@ -34,10 +39,19 @@ public:
 		ProcessStream(oss);
         return *this; 
     } 
- 
+
+    Table& operator<<(std::filesystem::path path) { 
+        std::ostringstream oss; 
+        oss << path.string(); // just to remove quotes
+		ProcessStream(oss);
+        return *this; 
+    } 
+
     Table& operator<<(HorizontalRule hr); 
  
     friend std::ostream& operator<<(std::ostream& out, const Table& table) { 
         return out << table.buf.str(); 
     } 
 }; 
+
+} // namespace utils

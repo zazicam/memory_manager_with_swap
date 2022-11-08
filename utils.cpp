@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "utils.hpp"
+#include "table.hpp"
 
 namespace utils {
 //----------------------------------------------------
@@ -9,64 +10,44 @@ namespace utils {
 //----------------------------------------------------
 using std::setw;
 
-void ProgressBar(size_t len, size_t total, size_t done) {
-	len -= 2;
+std::string ProgressBar(size_t len, size_t total, size_t done) {
 	size_t percent = 0;
 	size_t numBars = 0;
 	if(total > 0) {
 		percent = std::lround(100 * static_cast<double>(done) / total);	
 		numBars = std::lround(len * static_cast<double>(done) / total);	
 	}
-	std::string bar = "[" + std::string(numBars, '=') + std::string(len - numBars, ' ') + "]";
+	std::string bar = std::string(numBars, '=') + std::string(len - numBars, ' ');
 	std::string value = std::to_string(percent) + "%";
-	bar.replace(len/2, value.size(), value);
-	std::cout << bar;
-}
-
-fs::path TruncatePath(const fs::path& path, size_t width) { 
-	return fs::path {path.u32string().substr(0, width)};
-} 
-
-void PrintFileName(const fs::path& path, size_t width) {
-	fs::path shortPath = TruncatePath(path, width);
-	std::cout << shortPath.string();
-	size_t len = shortPath.u32string().length();
-	if(len < width)
-		std::cout << std::string(width - len, ' '); 
-}
-
-void ShowFileProgress(const fs::path& filename, std::shared_ptr<Progress> progress) {
-	PrintFileName(filename, 25);
-	std::cout << "  " << setw(10) << HumanReadable{progress->size};
-	ProgressBar(22, progress->size, progress->read);
-	ProgressBar(22, progress->size, progress->write);
-	std::cout << std::endl;
+	bar.replace(len/2 - value.length()/2, value.size(), value);
+	return bar;
 }
 
 void ShowProgress(const std::map<fs::path, std::shared_ptr<Progress>>& progressMap) {
-	std::ios init(nullptr);
-	init.copyfmt(std::cout);
-
-	std::cout << std::left << setw(25) << "filename" << "  "
-		<< setw(10) << "size"
-		<< setw(22) << "read"
-		<< setw(22) << "write" << std::endl;
+	Table table({25, 10, 20, 20});
+	table << hr;
+	table << "Filename" << "Size" << "Read" << "Write" << hr;
 
 	size_t totalSize = 0;
 	size_t totalRead = 0;
 	size_t totalWrite = 0;
 	for(const auto& [filename, progress] : progressMap) {
-		ShowFileProgress(filename, progress);
+		
+		table << filename 
+			<< HumanReadable{progress->size}
+			<< ProgressBar(18, progress->size, progress->read)
+			<< ProgressBar(18, progress->size, progress->write);
+	
 		totalSize += progress->size;
 		totalRead += progress->read;
 		totalWrite += progress->write;
 	}
-	std::cout << "\n";
+	table << hr;
+
+	std::cout << table;
 	std::cout << "Total progress [Size: " << HumanReadable{totalSize} << ", "
 	<< "Read: " << HumanReadable{totalRead} << ", "
 	<< "Write: " << HumanReadable{totalWrite} << "]\n";
-
-	std::cout.copyfmt(init);
 }
 
 //--------------------------------------------------------------
