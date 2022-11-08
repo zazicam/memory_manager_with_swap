@@ -124,8 +124,11 @@ DiskSwapLevel::~DiskSwapLevel() {
 //-------------------------------------------------------------------
 // class DiskSwap
 //-------------------------------------------------------------------
-DiskSwap::DiskSwap(void *poolAddress, size_t numBlocks, size_t blockSize)
-    : numBlocks(numBlocks), blockSize(blockSize), numLevels(2),
+DiskSwap::DiskSwap(MemoryPool* ownerPool, void *poolAddress, size_t numBlocks, size_t blockSize)
+    : pool(ownerPool),
+	  numBlocks(numBlocks), 
+	  blockSize(blockSize), 
+	  numLevels(2),
       poolAddress(static_cast<char *>(poolAddress)),
       swapTable({new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
                  new DiskSwapLevel(1, numBlocks, blockSize)}) 

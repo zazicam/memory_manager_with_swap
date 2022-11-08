@@ -15,6 +15,7 @@ struct PoolStat {
 	std::atomic<size_t> usedCounter = 0;
 	std::atomic<size_t> lockedCounter = 0;
 	std::atomic<size_t> swappedCounter = 0;
+	std::atomic<size_t> swapLevels = 0;
 };
 
 // --------------------------------------------------------

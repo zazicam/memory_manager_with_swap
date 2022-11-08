@@ -65,7 +65,10 @@ class DiskSwapLevel : public SwapLevel {
     ~DiskSwapLevel() override;
 };
 
+class MemoryPool;
+
 class DiskSwap {
+	MemoryPool *pool;
     size_t numBlocks;
     size_t blockSize;
     SwapIdType numLevels;
@@ -79,7 +82,7 @@ class DiskSwap {
     size_t FindSwapLevel(size_t blockIndex, SwapIdType id);
 
   public:
-    DiskSwap(void *poolAddress, size_t numBlocks, size_t blockSize);
+    DiskSwap(MemoryPool* ownerPool, void *poolAddress, size_t numBlocks, size_t blockSize);
 
     void MarkBlockAllocated(size_t blockIndex, SwapIdType id);
     void MarkBlockFreed(size_t blockIndex, SwapIdType id);

@@ -43,7 +43,7 @@ MemoryPool::MemoryPool(size_t numBlocks, size_t blockSize)
     blockIsLocked.resize(numBlocks, 0);
 
     // create disk swap
-    diskSwap = new DiskSwap(memoryPtr, numBlocks, blockSize);
+    diskSwap = new DiskSwap(this, memoryPtr, numBlocks, blockSize);
 
     std::cout << "Created memory pool " << numBlocks << " blocks x "
               << blockSize << " bytes" << std::endl;
