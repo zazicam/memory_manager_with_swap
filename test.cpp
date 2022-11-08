@@ -16,6 +16,7 @@
 #include "utils.hpp"
 
 namespace fs = std::filesystem;
+using utils::Progress;
 
 void CopyFilesInSingleThread(const fs::path &inputDir, const fs::path &outputDir); 
 void CopyFilesInMultipleThreads(const fs::path &inputDir, const fs::path &outputDir); 
@@ -28,8 +29,10 @@ void Free(std::vector<MemoryBlock>& blocks);
 void PrintStatisticsAndProgress(); 
 void DisplayInformation(); 
 
-using utils::Progress;
-
+//---------------------------------------------------------------
+// The main() function is here with some global variables just 
+// to control threads executions and display their progress. 
+//---------------------------------------------------------------
 static std::atomic<bool> finished = false;
 static std::map<fs::path, std::shared_ptr<Progress>> progressMap;
 
@@ -54,7 +57,6 @@ int main(int argc, char** argv) {
     std::cout << "\nCopying completed in " 
 		<< utils::hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) }
 		<< "\n" << std::endl;
-
     return 0;
 }
 
