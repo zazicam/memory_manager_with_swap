@@ -32,7 +32,6 @@ class MemoryManager {
     MemoryManager(MemoryManager &&) = delete;
     MemoryManager &operator=(MemoryManager &&) = delete;
 
-	void checkInitialized();
     MemoryBlock getBlock(size_t size);
     size_t maxBlockSize() const;
 	void printStatistics() const;

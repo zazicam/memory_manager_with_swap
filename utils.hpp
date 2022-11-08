@@ -34,21 +34,6 @@ class hh_mm_ss {
     explicit hh_mm_ss(std::chrono::milliseconds msec);
 };
 
-//-------------------------------------------------------------------
-// Allows to move the cursor to the desired position in the line 
-// using control characters. Moving does not affect the contents 
-// of the console until you print smth in a new position.
-//-------------------------------------------------------------------
-struct tab {
-	int pos = 0;
-private:
-	friend std::ostream& operator<<(std::ostream& out, const tab& t) {
-		return out << '\r' 
-			<< std::string(1 + t.pos / 8, '\t') 
-			<< std::string(8 - t.pos % 8, '\b');
-	}
-};
-
 //--------------------------------------------------------------
 // To show size of file or memory in human readable format
 // Copied from here (with small changes):
