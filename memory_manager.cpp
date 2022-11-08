@@ -68,7 +68,6 @@ void MemoryManager::printStatistics() const {
 	assert(memorySize != 0 && "MemoryManager must be initialized before usage");
 	for(const auto& [size, pool] : poolMap) {
 		const PoolStat& stat = pool->getStatistics();
-
 		table << size
 			<< pool->getNumBlocks()
 			<< stat.usedCounter 
