@@ -46,17 +46,14 @@ int main(int argc, char** argv) {
 
 	size_t memorySizeMb = utils::CheckArgsAndGetMemorySize(argc, argv);
     memoryManager.init(memorySizeMb * 1024 * 1024);
-
-	auto startTime = std::chrono::steady_clock::now();
+	
+	utils::timer.start();
 
 //    CopyFilesInSingleThread(inputDir, outputDir);
     CopyFilesInMultipleThreads(inputDir, outputDir);
 
-	auto endTime = std::chrono::steady_clock::now();
-
     std::cout << "\nCopying completed in " 
-		<< utils::hh_mm_ss{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) }
-		<< "\n" << std::endl;
+		<< utils::hh_mm_ss{utils::timer.elapsed()} << "\n" << std::endl;
     return 0;
 }
 

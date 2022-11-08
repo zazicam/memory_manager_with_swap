@@ -47,28 +47,8 @@ void ShowProgress(const std::map<fs::path, std::shared_ptr<Progress>>& progressM
 	std::cout << table;
 	std::cout << "Total progress [Size: " << HumanReadable{totalSize} << ", "
 	<< "Read: " << HumanReadable{totalRead} << ", "
-	<< "Write: " << HumanReadable{totalWrite} << "]\n";
-}
-
-//--------------------------------------------------------------
-// class hh_mm_ss - allows to print time in HH:MM:SS.MS format
-//--------------------------------------------------------------
-hh_mm_ss::hh_mm_ss(std::chrono::milliseconds msec) {
-	hours = std::chrono::duration_cast<std::chrono::hours>(msec);
-	msec -= hours;
-	minutes = std::chrono::duration_cast<std::chrono::minutes>(msec);
-	msec -= minutes;
-	seconds = std::chrono::duration_cast<std::chrono::seconds>(msec);
-	milliseconds = msec - seconds;
-}
-	
-std::ostream& operator<<(std::ostream& out, const hh_mm_ss& time) {
-	return out << time.hours.count() << ":" 
-		<< std::setfill('0') 
-		<< std::setw(2) << time.minutes.count() << ":" 
-		<< std::setw(2) << time.seconds.count() << "." 
-		<< std::setw(3) << time.milliseconds.count() 
-		<< std::setfill(' ');
+	<< "Write: " << HumanReadable{totalWrite} << ", "
+	<< "Time: " << hh_mm_ss{timer.elapsed()} << "]\n";
 }
 
 //--------------------------------------------------------------

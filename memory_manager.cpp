@@ -10,7 +10,6 @@
 
 #include "memory_manager.hpp"
 #include "utils.hpp"
-#include "table.hpp"
 
 MemoryManager& memoryManager = MemoryManager::instance();
 
