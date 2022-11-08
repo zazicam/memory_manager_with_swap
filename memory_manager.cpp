@@ -13,14 +13,11 @@
 
 MemoryManager& memoryManager = MemoryManager::instance();
 
-MemoryManager::MemoryManager() {}
-
-void MemoryManager::init(size_t memorySize) {
+void MemoryManager::init(size_t memoryLimit) {
 	std::lock_guard<std::mutex> guard(mutex);
-	assert(initialized == false && "MemoryManager can be initialized only once");
-	initialized = true;
+	assert(memorySize == 0 && "MemoryManager initialized already, can't do it twice");
+	memorySize = memoryLimit;
 
-	this->memorySize = memorySize;
     const size_t packOfBlocksSize =
         std::reduce(begin(blockSizes), end(blockSizes));
     const size_t N = memorySize / packOfBlocksSize;
@@ -36,7 +33,7 @@ void MemoryManager::init(size_t memorySize) {
 
 MemoryBlock MemoryManager::getBlock(size_t size) {
 	std::lock_guard<std::mutex> guard(mutex);
-	assert(initialized == true && "MemoryManager must be initialized before usage");
+	assert(memorySize != 0 && "MemoryManager must be initialized before usage");
     auto it = poolMap.lower_bound(size);
     if (it == end(poolMap)) {
         std::cerr << "Can't allocate more than " +
@@ -49,7 +46,7 @@ MemoryBlock MemoryManager::getBlock(size_t size) {
 
 size_t MemoryManager::maxBlockSize() const { 
 	std::lock_guard<std::mutex> guard(mutex);
-	assert(initialized == true && "MemoryManager must be initialized before usage");
+	assert(memorySize != 0 && "MemoryManager must be initialized before usage");
 	return blockSizes.back(); 
 }
 
@@ -89,7 +86,7 @@ void MemoryManager::printStatistics() const {
 	size_t ramUsage = 0;
 	size_t swapUsage = 0;
 	mutex.lock();
-	assert(initialized == true && "MemoryManager must be initialized before usage");
+	assert(memorySize != 0 && "MemoryManager must be initialized before usage");
 	for(const auto& [size, pool] : poolMap) {
 		const PoolStat& stat = pool->getStatistics();
 		out << std::left << "|"

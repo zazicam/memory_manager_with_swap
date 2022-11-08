@@ -11,16 +11,15 @@
 // Singleton (uses single swap folder)
 //-------------------------------------
 class MemoryManager {
-	bool initialized = false;
-	size_t memorySize;
+	size_t memorySize = 0;
     const std::vector<size_t> blockSizes{16,  32,   64,   128, 256,
                                          512, 1024, 2048, 4096};
     std::map<size_t, std::unique_ptr<MemoryPool>> poolMap;
 	mutable std::mutex mutex;
 
-  	MemoryManager();
+  	MemoryManager() = default;
   public:
-	void init(size_t memorySize);
+	void init(size_t memoryLimit); 
 
 	static MemoryManager& instance() {
 		static MemoryManager memory;
