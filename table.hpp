@@ -24,13 +24,13 @@ class Table {
     size_t column; 
     size_t row; 
 public: 
-    Table(std::vector<size_t>&& columnWidth);
+    explicit Table(std::vector<size_t>&& columnWidth);
  
     Table(const Table&) = delete; 
     Table operator=(const Table&) = delete; 
     Table operator=(Table) = delete; 
 
-	void ProcessStream(std::ostringstream& oss); 
+	void ProcessStream(const std::ostringstream& oss); 
  
     template<typename T> 
     Table& operator<<(T&& smth) { 

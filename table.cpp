@@ -28,7 +28,7 @@ Table::Table(std::vector<size_t>&& columnWidth)
 { 
 } 
 
-void Table::ProcessStream(std::ostringstream& oss) {
+void Table::ProcessStream(const std::ostringstream& oss) {
 	std::string value = oss.str();
 
 	// fs::path store a string platform independent 

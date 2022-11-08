@@ -30,7 +30,7 @@ struct Progress {
 struct HumanReadable {
     size_t size;
 	bool showInBytes;
-	HumanReadable(size_t size, bool showInBytes = false) 
+	explicit HumanReadable(size_t size, bool showInBytes = false) 
 		: size(size), showInBytes(showInBytes) {}
   private:
     friend std::ostream &operator<<(std::ostream &os, HumanReadable hr) {
