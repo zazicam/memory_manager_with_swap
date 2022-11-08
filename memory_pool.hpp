@@ -23,6 +23,7 @@ struct PoolStat {
 // --------------------------------------------------------
 class MemoryPool {
     friend class MemoryBlock;
+	friend class DiskSwap;
     size_t numBlocks;
     size_t blockSize;
     size_t totalSize;

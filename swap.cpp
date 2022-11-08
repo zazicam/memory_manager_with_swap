@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 
+#include "memory_pool.hpp"
 #include "logger.hpp"
 #include "swap.hpp"
 
@@ -133,6 +134,7 @@ DiskSwap::DiskSwap(MemoryPool* ownerPool, void *poolAddress, size_t numBlocks, s
       swapTable({new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
                  new DiskSwapLevel(1, numBlocks, blockSize)}) 
 {
+	pool->stat.swapLevels = numLevels;
 }
 
 void DiskSwap::LoadBlockIntoRam(size_t blockIndex, SwapIdType id) {
@@ -237,6 +239,7 @@ SwapIdType DiskSwap::Swap(size_t blockIndex) {
         swapTable.push_back(new DiskSwapLevel{numLevels, numBlocks, blockSize});
         swapLevel = numLevels;
         ++numLevels;
+		pool->stat.swapLevels = numLevels;
     }
 
     Swap(blockIndex, swapLevel);
@@ -267,4 +270,5 @@ DiskSwap::~DiskSwap() {
     for (SwapLevel *swapLevel : swapTable) {
         delete swapLevel;
     }
+	pool->stat.swapLevels = 0;
 }
