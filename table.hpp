@@ -40,13 +40,6 @@ public:
         return *this; 
     } 
 
-    Table& operator<<(std::filesystem::path&& path) { 
-        std::ostringstream oss; 
-        oss << path.string(); // just to remove quotes
-		ProcessStream(oss);
-        return *this; 
-    } 
-
     Table& operator<<(HorizontalRule hr); 
  
     friend std::ostream& operator<<(std::ostream& out, const Table& table) { 

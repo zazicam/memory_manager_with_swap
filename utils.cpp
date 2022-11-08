@@ -32,8 +32,7 @@ void ShowProgress(const std::map<fs::path, std::shared_ptr<Progress>>& progressM
 	size_t totalRead = 0;
 	size_t totalWrite = 0;
 	for(const auto& [filename, progress] : progressMap) {
-		
-		table << filename 
+		table << filename.string() 
 			<< HumanReadable{progress->size}
 			<< ProgressBar(18, progress->size, progress->read)
 			<< ProgressBar(18, progress->size, progress->write);
