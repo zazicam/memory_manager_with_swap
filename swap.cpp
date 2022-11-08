@@ -8,8 +8,8 @@
 #include <iostream>
 #include <vector>
 
-#include "memory_pool.hpp"
 #include "logger.hpp"
+#include "memory_pool.hpp"
 #include "swap.hpp"
 
 namespace fs = std::filesystem;
@@ -60,20 +60,21 @@ RamSwapLevel::~RamSwapLevel() {}
 // class DiskLevel
 //-------------------------------------------------------------------
 DiskSwapLevel::DiskSwapLevel(size_t level, size_t numBlocks, size_t blockSize)
-    : SwapLevel(level, numBlocks, blockSize) 
-{
-	fs::path swapDir = SWAP_DIR_PATH;
-	if(!fs::exists(swapDir) && !fs::create_directory(swapDir)) {
-		std::cerr << "Swap folder " << swapDir << " does not exists"
-			" and can't create it!" << std::endl;
-		exit(1);
-	}
+    : SwapLevel(level, numBlocks, blockSize) {
+    fs::path swapDir = SWAP_DIR_PATH;
+    if (!fs::exists(swapDir) && !fs::create_directory(swapDir)) {
+        std::cerr << "Swap folder " << swapDir
+                  << " does not exists"
+                     " and can't create it!"
+                  << std::endl;
+        exit(1);
+    }
 
-    std::string filename = std::string("swap") + "_" + std::to_string(numBlocks) + "x" +
-               std::to_string(blockSize) + "_" + "L" + std::to_string(level) +
-               ".bin";
+    std::string filename =
+        std::string("swap") + "_" + std::to_string(numBlocks) + "x" +
+        std::to_string(blockSize) + "_" + "L" + std::to_string(level) + ".bin";
 
-	filepath = swapDir / filename;
+    filepath = swapDir / filename;
 
     // just to create a new file
     std::ofstream tmp(filepath, std::ios::binary);
@@ -125,16 +126,13 @@ DiskSwapLevel::~DiskSwapLevel() {
 //-------------------------------------------------------------------
 // class DiskSwap
 //-------------------------------------------------------------------
-DiskSwap::DiskSwap(MemoryPool* ownerPool, void *poolAddress, size_t numBlocks, size_t blockSize)
-    : pool(ownerPool),
-	  numBlocks(numBlocks), 
-	  blockSize(blockSize), 
-	  numLevels(2),
+DiskSwap::DiskSwap(MemoryPool *ownerPool, void *poolAddress, size_t numBlocks,
+                   size_t blockSize)
+    : pool(ownerPool), numBlocks(numBlocks), blockSize(blockSize), numLevels(2),
       poolAddress(static_cast<char *>(poolAddress)),
       swapTable({new RamSwapLevel(0, numBlocks, blockSize, poolAddress),
-                 new DiskSwapLevel(1, numBlocks, blockSize)}) 
-{
-	pool->stat.swapLevels = numLevels;
+                 new DiskSwapLevel(1, numBlocks, blockSize)}) {
+    pool->stat.swapLevels = numLevels;
 }
 
 void DiskSwap::LoadBlockIntoRam(size_t blockIndex, SwapIdType id) {
@@ -239,7 +237,7 @@ SwapIdType DiskSwap::Swap(size_t blockIndex) {
         swapTable.push_back(new DiskSwapLevel{numLevels, numBlocks, blockSize});
         swapLevel = numLevels;
         ++numLevels;
-		pool->stat.swapLevels = numLevels;
+        pool->stat.swapLevels = numLevels;
     }
 
     Swap(blockIndex, swapLevel);
@@ -270,5 +268,5 @@ DiskSwap::~DiskSwap() {
     for (SwapLevel *swapLevel : swapTable) {
         delete swapLevel;
     }
-	pool->stat.swapLevels = 0;
+    pool->stat.swapLevels = 0;
 }

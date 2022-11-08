@@ -2,8 +2,8 @@
 
 #include <cstddef>
 
-#include "swap.hpp"
 #include "logger.hpp"
+#include "swap.hpp"
 
 class MemoryPool;
 
@@ -11,34 +11,33 @@ class MemoryPool;
 // class MemoryBlock
 // --------------------------------------------------------
 class MemoryBlock {
-    void* ptr_;
+    void *ptr_;
     SwapIdType id_;
     size_t capacity_;
     size_t size_;
-	bool locked_;
+    bool locked_;
     MemoryPool *pool_;
-	bool moved_;
+    bool moved_;
 
-	template<typename T> 
-	class AutoLocker {
-		T* ptr;
-		mutable const MemoryBlock* block;
-		bool wasLocked;
-	public:
-		AutoLocker(T* ptr, const MemoryBlock* block) 
-			: ptr(ptr), block(block), wasLocked(block->isLocked())
-		{
-			if(!wasLocked) 
-				const_cast<MemoryBlock*>(block)->lock(); 
-		}
-		~AutoLocker() { 
-			if(!wasLocked)
-				const_cast<MemoryBlock*>(block)->unlock(); 
-		}
-		operator T*() { return ptr; }
-	};
+    template <typename T> class AutoLocker {
+        T *ptr;
+        mutable const MemoryBlock *block;
+        bool wasLocked;
 
-	void swap(MemoryBlock &other);
+      public:
+        AutoLocker(T *ptr, const MemoryBlock *block)
+            : ptr(ptr), block(block), wasLocked(block->isLocked()) {
+            if (!wasLocked)
+                const_cast<MemoryBlock *>(block)->lock();
+        }
+        ~AutoLocker() {
+            if (!wasLocked)
+                const_cast<MemoryBlock *>(block)->unlock();
+        }
+        operator T *() { return ptr; }
+    };
+
+    void swap(MemoryBlock &other);
 
   public:
     MemoryBlock();
@@ -50,18 +49,16 @@ class MemoryBlock {
 
     MemoryBlock(MemoryBlock &&);
     MemoryBlock &operator=(MemoryBlock &&);
-	
-	template<typename T=char>
-	AutoLocker<T> data() {
-		assert(ptr_!=nullptr);
-		return AutoLocker{static_cast<T*>(ptr_), this};
-	}
 
-	template<typename T=const char>
-	AutoLocker<T> data() const {
-		assert(ptr_!=nullptr);
-		return AutoLocker{static_cast<T*>(ptr_), this};
-	}
+    template <typename T = char> AutoLocker<T> data() {
+        assert(ptr_ != nullptr);
+        return AutoLocker{static_cast<T *>(ptr_), this};
+    }
+
+    template <typename T = const char> AutoLocker<T> data() const {
+        assert(ptr_ != nullptr);
+        return AutoLocker{static_cast<T *>(ptr_), this};
+    }
 
     size_t size() const;
     size_t capacity() const;
@@ -69,9 +66,8 @@ class MemoryBlock {
     void lock();
     void unlock();
     void free();
-	bool isLocked() const;
+    bool isLocked() const;
 
-	void checkScopeError() const; // can exit(1)
+    void checkScopeError() const; // can exit(1)
     void debugPrint() const;
 };
-

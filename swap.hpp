@@ -2,11 +2,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <mutex>
 #include <vector>
-#include <filesystem>
 
 //-------------------------------------------
 // swap config
@@ -68,7 +68,7 @@ class DiskSwapLevel : public SwapLevel {
 class MemoryPool;
 
 class DiskSwap {
-	MemoryPool *pool;
+    MemoryPool *pool;
     size_t numBlocks;
     size_t blockSize;
     SwapIdType numLevels;
@@ -82,7 +82,8 @@ class DiskSwap {
     size_t FindSwapLevel(size_t blockIndex, SwapIdType id);
 
   public:
-    DiskSwap(MemoryPool* ownerPool, void *poolAddress, size_t numBlocks, size_t blockSize);
+    DiskSwap(MemoryPool *ownerPool, void *poolAddress, size_t numBlocks,
+             size_t blockSize);
 
     void MarkBlockAllocated(size_t blockIndex, SwapIdType id);
     void MarkBlockFreed(size_t blockIndex, SwapIdType id);

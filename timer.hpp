@@ -3,13 +3,14 @@
 namespace utils {
 
 //--------------------------------------------------------------
-// Allows to measure time duration 
+// Allows to measure time duration
 //--------------------------------------------------------------
 class Timer {
-	std::chrono::steady_clock::time_point startTime;
-public:
-	void start(); 
-	std::chrono::milliseconds elapsed();
+    std::chrono::steady_clock::time_point startTime;
+
+  public:
+    void start();
+    std::chrono::milliseconds elapsed();
 };
 
 extern Timer timer;

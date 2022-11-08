@@ -1,22 +1,22 @@
-#include <iostream>
-#include <sstream>
 #include <cassert>
+#include <iomanip>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <numeric>
 #include <sstream>
 #include <vector>
-#include <iomanip>
 
 #include "memory_manager.hpp"
 #include "utils.hpp"
 
-MemoryManager& memoryManager = MemoryManager::instance();
+MemoryManager &memoryManager = MemoryManager::instance();
 
 void MemoryManager::init(size_t memoryLimit) {
-	std::lock_guard<std::mutex> guard(mutex);
-	assert(memorySize == 0 && "MemoryManager initialized already, can't do it twice");
-	memorySize = memoryLimit;
+    std::lock_guard<std::mutex> guard(mutex);
+    assert(memorySize == 0 &&
+           "MemoryManager initialized already, can't do it twice");
+    memorySize = memoryLimit;
 
     const size_t packOfBlocksSize =
         std::reduce(begin(blockSizes), end(blockSizes));
@@ -32,8 +32,8 @@ void MemoryManager::init(size_t memoryLimit) {
 }
 
 MemoryBlock MemoryManager::getBlock(size_t size) {
-	std::lock_guard<std::mutex> guard(mutex);
-	assert(memorySize != 0 && "MemoryManager must be initialized before usage");
+    std::lock_guard<std::mutex> guard(mutex);
+    assert(memorySize != 0 && "MemoryManager must be initialized before usage");
     auto it = poolMap.lower_bound(size);
     if (it == end(poolMap)) {
         std::cerr << "Can't allocate more than " +
@@ -44,44 +44,46 @@ MemoryBlock MemoryManager::getBlock(size_t size) {
     return it->second->getBlock(size);
 }
 
-size_t MemoryManager::maxBlockSize() const { 
-	std::lock_guard<std::mutex> guard(mutex);
-	assert(memorySize != 0 && "MemoryManager must be initialized before usage");
-	return blockSizes.back(); 
+size_t MemoryManager::maxBlockSize() const {
+    std::lock_guard<std::mutex> guard(mutex);
+    assert(memorySize != 0 && "MemoryManager must be initialized before usage");
+    return blockSizes.back();
 }
 
 //------------------------------
-// Show statistics like a table 
+// Show statistics like a table
 //------------------------------
-using utils::Table;
 using utils::hr;
+using utils::Table;
 
 void MemoryManager::printStatistics() const {
-	Table table({12, 14, 14, 9, 12, 12});
-	table << hr;
-	table << "Block size" << "Blocks (RAM)" << "Used" << "Locked" << "Swapped" << "Swap level" << hr;
+    Table table({12, 14, 14, 9, 12, 12});
+    table << hr;
+    table << "Block size"
+          << "Blocks (RAM)"
+          << "Used"
+          << "Locked"
+          << "Swapped"
+          << "Swap level" << hr;
 
-	size_t ramUsage = 0;
-	size_t swapUsage = 0;
-	mutex.lock();
-	assert(memorySize != 0 && "MemoryManager must be initialized before usage");
-	for(const auto& [size, pool] : poolMap) {
-		const PoolStat& stat = pool->getStatistics();
-		table << size
-			<< pool->getNumBlocks()
-			<< stat.usedCounter 
-			<< stat.lockedCounter 
-			<< stat.swappedCounter
-			<< stat.swapLevels;
+    size_t ramUsage = 0;
+    size_t swapUsage = 0;
+    mutex.lock();
+    assert(memorySize != 0 && "MemoryManager must be initialized before usage");
+    for (const auto &[size, pool] : poolMap) {
+        const PoolStat &stat = pool->getStatistics();
+        table << size << pool->getNumBlocks() << stat.usedCounter
+              << stat.lockedCounter << stat.swappedCounter << stat.swapLevels;
 
-		ramUsage += size * stat.usedCounter;
-		swapUsage += size * stat.swappedCounter;
-	}
-	mutex.unlock();
-	
-	table << hr;
-	std::cout << table;
-	std::cout << "Memory manager usage [Limit RAM: " << utils::HumanReadable{memorySize} << ", "
-	    << "Used RAM: " << utils::HumanReadable{ramUsage} << ", "
-		<< "Disk(swap): " << utils::HumanReadable{swapUsage} << "]\n";
+        ramUsage += size * stat.usedCounter;
+        swapUsage += size * stat.swappedCounter;
+    }
+    mutex.unlock();
+
+    table << hr;
+    std::cout << table;
+    std::cout << "Memory manager usage [Limit RAM: "
+              << utils::HumanReadable{memorySize} << ", "
+              << "Used RAM: " << utils::HumanReadable{ramUsage} << ", "
+              << "Disk(swap): " << utils::HumanReadable{swapUsage} << "]\n";
 }

@@ -1,14 +1,14 @@
 #pragma once
 
-#include <iostream>
-#include <sstream>
-#include <filesystem>
 #include <atomic>
-#include <map>
 #include <cmath>
+#include <filesystem>
+#include <iostream>
+#include <map>
+#include <sstream>
 
-#include "timer.hpp"
 #include "table.hpp"
+#include "timer.hpp"
 
 namespace fs = std::filesystem;
 
@@ -29,24 +29,26 @@ struct Progress {
 //--------------------------------------------------------------
 struct HumanReadable {
     size_t size;
-	bool showInBytes;
-	explicit HumanReadable(size_t size, bool showInBytes = false) 
-		: size(size), showInBytes(showInBytes) {}
+    bool showInBytes;
+    explicit HumanReadable(size_t size, bool showInBytes = false)
+        : size(size), showInBytes(showInBytes) {}
+
   private:
     friend std::ostream &operator<<(std::ostream &os, HumanReadable hr) {
-		std::ostringstream out;
+        std::ostringstream out;
         int i{};
         double mantissa = static_cast<double>(hr.size);
         for (; mantissa >= 1024.; mantissa /= 1024., ++i) {
         }
         mantissa = std::ceil(mantissa * 10.) / 10.;
-        out << mantissa << " " << "BKMGTPE"[i];
-		if(i>0) {
-			out << "B";
-			if(hr.showInBytes) 
-				out << " (" << hr.size << ')';
-		}
-		return os << out.str();
+        out << mantissa << " "
+            << "BKMGTPE"[i];
+        if (i > 0) {
+            out << "B";
+            if (hr.showInBytes)
+                out << " (" << hr.size << ')';
+        }
+        return os << out.str();
     }
 };
 
@@ -58,9 +60,9 @@ size_t CheckArgsAndGetMemorySize(int argc, char **argv);
 void CheckIfDirectoryExists(const fs::path &dir);
 void CreateDirectoryIfNotExists(const fs::path &dir);
 void ShowProgress(
-    const std::map<fs::path, std::shared_ptr<Progress>>& progressMap);
+    const std::map<fs::path, std::shared_ptr<Progress>> &progressMap);
 
 void ClearConsole();
-fs::path TruncatePath(const fs::path& path, size_t width); 
+fs::path TruncatePath(const fs::path &path, size_t width);
 
 } // namespace utils

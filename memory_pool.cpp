@@ -66,33 +66,33 @@ MemoryBlock MemoryPool::getBlock(size_t size) {
         swapMutex.lock();
         diskSwap->MarkBlockAllocated(blockIndex, blockId);
         swapMutex.unlock();
-		stat.usedCounter++;
+        stat.usedCounter++;
     } else {
         // No free blocks in pool, try to use swap
 
         // Random block for test :)
         // blockIndex = rand() % numBlocks;
 
-		// The oldest allocated block for task
-		if(!swapQueue.empty()) {
-			blockIndex = swapQueue.front();
-			swapQueue.pop();
-		}
+        // The oldest allocated block for task
+        if (!swapQueue.empty()) {
+            blockIndex = swapQueue.front();
+            swapQueue.pop();
+        }
 
         ptr = blockAddressByIndex(blockIndex);
 
         lockBlock(ptr);
         swapMutex.lock();
 
-	 	// returns unique id for each new block
+        // returns unique id for each new block
         blockId = diskSwap->Swap(blockIndex);
 
         diskSwap->MarkBlockAllocated(blockIndex, blockId);
         swapMutex.unlock();
         unlockBlock(ptr);
-		stat.swappedCounter++;
+        stat.swappedCounter++;
     }
-	swapQueue.push(blockIndex);
+    swapQueue.push(blockIndex);
     return MemoryBlock{ptr, blockId, blockSize, size, false, this};
 }
 
@@ -125,19 +125,19 @@ char *MemoryPool::blockAddressByIndex(size_t index) {
 void MemoryPool::lockBlock(void *ptr) {
     size_t blockIndex = blockIndexByAddress(ptr);
     std::unique_lock<std::mutex> ul(blockMutex);
-    conditionVariable.wait(
-        ul, [=]() { return blockIsLocked.at(blockIndex) == 0; });
+    conditionVariable.wait(ul,
+                           [=]() { return blockIsLocked.at(blockIndex) == 0; });
     blockIsLocked.at(blockIndexByAddress(ptr)) = 1;
     ul.unlock();
-	stat.lockedCounter++;
+    stat.lockedCounter++;
 }
 
 void MemoryPool::unlockBlock(void *ptr) {
     std::unique_lock<std::mutex> ul(blockMutex);
-	blockIsLocked.at(blockIndexByAddress(ptr)) = 0;
-	conditionVariable.notify_one();
+    blockIsLocked.at(blockIndexByAddress(ptr)) = 0;
+    conditionVariable.notify_one();
     ul.unlock();
-	stat.lockedCounter--;
+    stat.lockedCounter--;
 }
 
 void MemoryPool::freeBlock(void *ptr, SwapIdType id) {
@@ -148,27 +148,25 @@ void MemoryPool::freeBlock(void *ptr, SwapIdType id) {
     if (diskSwap->isBlockInSwap(blockIndex, id)) {
         // it's in swap, let's just mark it freed (in swapTable)
         diskSwap->MarkBlockFreed(blockIndex, id);
-		stat.swappedCounter--;
+        stat.swappedCounter--;
     } else {
-		// it's it ram
+        // it's it ram
         if (diskSwap->HasSwappedBlocks(blockIndex)) {
             diskSwap->ReturnLastSwappedBlockIntoRam(blockIndex);
-			stat.swappedCounter--;
+            stat.swappedCounter--;
         } else {
             privateFree(ptr);
             diskSwap->MarkBlockFreed(blockIndex, id);
-			stat.usedCounter--;
+            stat.usedCounter--;
         }
     }
     swapMutex.unlock();
     unlockBlock(ptr);
 }
 
-const PoolStat& MemoryPool::getStatistics() const {
-	return stat;
-}
+const PoolStat &MemoryPool::getStatistics() const { return stat; }
 
 size_t MemoryPool::getNumBlocks() const {
     std::lock_guard<std::mutex> poolGuard(poolMutex);
-	return numBlocks;
+    return numBlocks;
 }
