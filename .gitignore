@@ -1,0 +1,9 @@
+#.gitignore
+*.o
+*.bin
+a.out
+*_test
+check_result
+input/*
+output/*
+build/*
