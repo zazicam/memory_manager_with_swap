@@ -18,6 +18,7 @@
 namespace fs = std::filesystem;
 using utils::Progress;
 
+void Prepare(const fs::path &inputDir); 
 void CopyFilesInSingleThread(const fs::path &inputDir,
                              const fs::path &outputDir);
 void CopyFilesInMultipleThreads(const fs::path &inputDir,
@@ -51,9 +52,10 @@ int main(int argc, char **argv) {
     memoryManager.init(memorySizeMb * 1024 * 1024);
 
     utils::timer.start();
-
-    //    CopyFilesInSingleThread(inputDir, outputDir);
+	
+	Prepare(inputDir);
     CopyFilesInMultipleThreads(inputDir, outputDir);
+    //    CopyFilesInSingleThread(inputDir, outputDir);
 
     std::cout << "\nCopying completed in "
               << utils::hh_mm_ss{utils::timer.elapsed()} << "\n"
@@ -61,18 +63,26 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+void Prepare(const fs::path &inputDir) {
+    std::cout << "List of files in input folder '" << inputDir
+              << "':" << std::endl;
+    for (const auto &entry : fs::directory_iterator(inputDir)) {
+		if(fs::is_regular_file(entry.path())) {
+			const fs::path filename = entry.path().filename();
+			std::cout << filename << std::endl;
+			progressMap[filename] = std::make_shared<Progress>();
+		}
+    }
+}
+
 void CopyFilesInSingleThread(const fs::path &inputDir,
                              const fs::path &outputDir) {
-    for (const auto &entry : fs::directory_iterator(inputDir)) {
-        const fs::path filename = entry.path().filename();
-        std::cout << filename << std::endl;
-        progressMap[filename] = std::make_shared<Progress>();
-    }
-
     std::thread infoThread(DisplayInformation);
     for (const auto &entry : fs::directory_iterator(inputDir)) {
-        const fs::path filename = entry.path().filename();
-        CopyFile(inputDir / filename, outputDir / filename);
+		if(fs::is_regular_file(entry.path())) {
+			const fs::path filename = entry.path().filename();
+			CopyFile(inputDir / filename, outputDir / filename);
+		}
     }
 
     finished = true;
@@ -81,19 +91,13 @@ void CopyFilesInSingleThread(const fs::path &inputDir,
 
 void CopyFilesInMultipleThreads(const fs::path &inputDir,
                                 const fs::path &outputDir) {
-    std::cout << "List of files in input folder '" << inputDir
-              << "':" << std::endl;
-    for (const auto &entry : fs::directory_iterator(inputDir)) {
-        const fs::path filename = entry.path().filename();
-        std::cout << filename << std::endl;
-        progressMap[filename] = std::make_shared<Progress>();
-    }
-
     std::vector<std::thread> threads;
     for (const auto &entry : fs::directory_iterator(inputDir)) {
-        const fs::path filename = entry.path().filename();
-        threads.emplace_back(CopyFile, inputDir / filename,
-                             outputDir / filename);
+		if(fs::is_regular_file(entry.path())) {
+			const fs::path filename = entry.path().filename();
+			threads.emplace_back(CopyFile, inputDir / filename,
+								 outputDir / filename);
+		}
     }
     std::cout << "\nStarted copying in " << threads.size() << " threads..."
               << std::endl;
