@@ -7,8 +7,8 @@
 #include <sstream>
 #include <vector>
 
-#include "memory_manager.hpp"
 #include "../utils/utils.hpp"
+#include "memory_manager.hpp"
 
 MemoryManager &memoryManager = MemoryManager::instance();
 
