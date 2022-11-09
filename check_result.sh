@@ -1,5 +1,33 @@
+#!/bin/bash
+
 inputDir="./input"
 outputDir="./output"
+
+function help {
+	echo
+	echo "This script checks that all files from input folder ('$inputDir' by default)"
+	echo "were copied to the output folder ('$outputDir' by default)." 
+	echo "You can give it pathes to other folders using comand line arguments."
+	echo "Example: "
+	echo "	$0 [input folder] [output folder]"
+}
+
+if [ $# -eq 2 ]; then
+	inputDir=$1
+	outputDir=$2
+fi
+
+if [ ! -d "$inputDir" ]; then
+	echo "$inputDir does not exist."
+	help
+	exit 1
+fi
+
+if [ ! -d "$outputDir" ]; then
+	echo "$outputDir does not exist."
+	help
+	exit 1
+fi
 
 error=false
 for file in $inputDir/*; do
