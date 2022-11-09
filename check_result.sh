@@ -35,17 +35,21 @@ for file in $inputDir/*; do
 	inputFile="$inputDir/$filename"
 	outputFile="$outputDir/$filename"
 	echo -n "$filename ... " 
-	if [ -f "$outputFile" ]; then
-		DIFF=$(diff "$inputFile" "$outputFile")
-		if [ "$DIFF" == "" ]; then
-			echo "[+]" 
+	if [ -f "$inputFile" ]; then
+		if [ -f "$outputFile" ]; then
+			DIFF=$(diff "$inputFile" "$outputFile")
+			if [ "$DIFF" == "" ]; then
+				echo "[+]" 
+			else
+				echo "[ERROR: wrong file]"
+				error=true	
+			fi	
 		else
-			echo "[ERROR: wrong file]"
+			echo "[ERROR: no such file]"
 			error=true	
-		fi	
+		fi
 	else
-		echo "[ERROR: no such file]"
-		error=true	
+		echo "[skip - not a file]"
 	fi
 done
 
