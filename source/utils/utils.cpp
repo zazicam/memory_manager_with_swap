@@ -85,7 +85,7 @@ size_t CheckArgsAndGetMemorySize(int argc, char **argv) {
     if (argc < 2) {
         std::cout << "This program needs an integer argument." << std::endl;
         std::cout << "Usage: " << std::endl;
-        std::cout << "\t" << argv[0] << " [size of RAM in Mb]" << std::endl;
+        std::cout << "\t" << argv[0] << " [Limit size of RAM to use in Mb]" << std::endl;
         exit(1);
     }
 
